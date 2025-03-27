@@ -17,7 +17,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Функция для отправки вебхука
     async function sendWebhook(eventType) {
         try {
-            const response = await fetch('YOUR_WEBHOOK_URL', {
+            // Показываем спиннер
+            showLoading();
+            
+            // Выбираем правильный URL вебхука в зависимости от мероприятия
+            let webhookUrl = '';
+            switch(eventType) {
+                case 'event1': // RestaurantWeek Moscow
+                case 'event2': // RestaurantWeek Dubai RU
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzw8Ga0XSDKaKx-lFnudftrI41O_pYT1vSG0xXhMjSgkJa-i2MgFOb_lSdRH0PdvysI6g/exec';
+                    break;
+                case 'event3': // RestaurantWeek Dubai ENG
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbyHD_MJgFv2dZOCyIpg61r7s4rP2aTw4fKH1wHy5mkySnVIIM6P52Lv93m_d-UD_6XdUw/exec';
+                    break;
+                case 'event4': // SalonWeek Moscow
+                case 'event5': // SalonWeek Dubai RU
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbxDqj8AQS_VZ4fgrw3thQKIKBbyOdf1YJf0Rew_ipKXlcpyqIbkB75YJwl_rR2lJXcLdw/exec';
+                    break;
+                case 'event6': // SalonWeek Dubai ENG
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzCY7G1GyeIudhgtsIMB-v29Fhlbq1G0M0HUSGTjtqIaKhYrUKcq7tmuAggzVQHoFCp/exec';
+                    break;
+            }
+
+            const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -31,17 +53,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (response.ok) {
-                resultDiv.innerHTML = `
-                    <p>Промокод успешно создан!</p>
-                    <p>Ссылка на таблицу: <a href="${data.spreadsheetUrl}" target="_blank">${data.spreadsheetUrl}</a></p>
-                `;
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                showSuccess(data.spreadsheetUrl);
+                // Очищаем поле ввода
+                promoCodeInput.value = '';
+                promoDisplay.textContent = '';
             } else {
                 throw new Error('Ошибка при создании промокода');
             }
         } catch (error) {
-            resultDiv.innerHTML = `
-                <p style="color: red;">Ошибка: ${error.message}</p>
-            `;
+            showError(error.message);
         }
     }
 
@@ -49,12 +73,30 @@ document.addEventListener('DOMContentLoaded', function() {
     createButton.addEventListener('click', function() {
         const selectedEvent = eventSelect.value;
         if (!currentPromoCode.trim()) {
-            resultDiv.innerHTML = `
-                <p style="color: red;">Пожалуйста, введите промокод</p>
-            `;
+            showError('Пожалуйста, введите промокод');
             return;
         }
 
         sendWebhook(selectedEvent);
     });
+
+    // Функции для отображения состояния
+    function showLoading() {
+        resultDiv.innerHTML = '<div class="loading">Создание промокода...</div>';
+    }
+
+    function showSuccess(url) {
+        resultDiv.innerHTML = `
+            <div class="success">
+                Промокод успешно создан!
+                <p>Ссылка на таблицу: <a href="${url}" target="_blank">${url}</a></p>
+            </div>
+        `;
+    }
+
+    function showError(message) {
+        resultDiv.innerHTML = `
+            <div class="error">${message}</div>
+        `;
+    }
 });

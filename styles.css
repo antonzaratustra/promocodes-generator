@@ -94,3 +94,69 @@ button:hover {
 .result a:hover {
     text-decoration: underline;
 }
+
+.table-buttons, .folder-buttons {
+    margin-bottom: 20px;
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.table-btn, .folder-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.table-btn {
+    background-color: #4CAF50;
+}
+
+.table-btn:hover {
+    background-color: #45a049;
+}
+
+.folder-btn {
+    background-color: #2196F3;
+}
+
+.folder-btn:hover {
+    background-color: #1976D2;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.success {
+    color: #4CAF50;
+}
+
+.error {
+    color: #f44336;
+}
