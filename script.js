@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
         promoDisplay.textContent = currentPromoCode;
     });
 
-    // Функция для отправки вебхука
+    // Функция для отправки вебхука без ожидания ответа
     async function sendWebhook(eventType) {
         try {
             // Показываем спиннер
@@ -25,45 +25,38 @@ document.addEventListener('DOMContentLoaded', function() {
             switch(eventType) {
                 case 'event1': // RestaurantWeek Moscow
                 case 'event2': // RestaurantWeek Dubai RU
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzw8Ga0XSDKaKx-lFnudftrI41O_pYT1vSG0xXhMjSgkJa-i2MgFOb_lSdRH0PdvysI6g/exec';
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbwzUnZNxkO70ArNKDAcGo2JJw0ziRh31MJcr07EyRBSA-SFgpGdFk91KMvd-JykaVcECw/exec';
                     break;
                 case 'event3': // RestaurantWeek Dubai ENG
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbyHD_MJgFv2dZOCyIpg61r7s4rP2aTw4fKH1wHy5mkySnVIIM6P52Lv93m_d-UD_6XdUw/exec';
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzb78Q3FMc-lbzHWE90xQJXN20StEaPpMBA0INW0Sm8-XBsmdiUagsIc-MNMP34vKhDLw/exec';
                     break;
                 case 'event4': // SalonWeek Moscow
                 case 'event5': // SalonWeek Dubai RU
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbxDqj8AQS_VZ4fgrw3thQKIKBbyOdf1YJf0Rew_ipKXlcpyqIbkB75YJwl_rR2lJXcLdw/exec';
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzQTm4hZAEQ06l5E8rrGr-HH6hV4DNdArv0nHaM2GxMcSqXNCMWk29J2soNbRH9nwU2yw/exec';
                     break;
                 case 'event6': // SalonWeek Dubai ENG
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzCY7G1GyeIudhgtsIMB-v29Fhlbq1G0M0HUSGTjtqIaKhYrUKcq7tmuAggzVQHoFCp/exec';
+                    webhookUrl = 'https://script.google.com/macros/s/AKfycbwS7UG9JJfyUEHon9HIROivB1lhmsbKbrMaMRjTp6Z0IiA1-TdIvIVTuTL25IanpXKX/exec';
                     break;
             }
 
-            const response = await fetch(webhookUrl, {
+            // Отправляем запрос в режиме no-cors
+            await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     event: eventType,
                     promoCode: currentPromoCode
-                })
+                }),
+                mode: 'no-cors' // Режим no-cors, чтобы не ожидать ответа
             });
 
-            const data = await response.json();
-            
-            if (response.ok) {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                showSuccess(data.spreadsheetUrl);
-                // Очищаем поле ввода
-                promoCodeInput.value = '';
-                promoDisplay.textContent = '';
-            } else {
-                throw new Error('Ошибка при создании промокода');
-            }
+            // Показываем сообщение об успехе без URL
+            showSuccess();
+            // Очищаем поле ввода
+            promoCodeInput.value = '';
+            promoDisplay.textContent = '';
         } catch (error) {
             showError(error.message);
         }
@@ -85,11 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
         resultDiv.innerHTML = '<div class="loading">Создание промокода...</div>';
     }
 
-    function showSuccess(url) {
+    function showSuccess() {
         resultDiv.innerHTML = `
             <div class="success">
                 Промокод успешно создан!
-                <p>Ссылка на таблицу: <a href="${url}" target="_blank">${url}</a></p>
+                <p>Таблица добавлена в Google Drive.</p>
             </div>
         `;
     }

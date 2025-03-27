@@ -4,55 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор промокодов</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <h1>Генератор промокодов</h1>
         
-        <div class="table-buttons">
-            <h2>Таблицы</h2>
-            <div class="button-group">
-                <a href="https://docs.google.com/spreadsheets/d/1a5dNyJLA8rrJC1SYe1O9AfKElhHBtNjNO4SGvvU0gVc/edit" target="_blank" class="table-btn">RestaurantWeek RU</a>
-                <a href="https://docs.google.com/spreadsheets/d/1oyHD5ODFf5XvnlU-XWD3gCr99POTUYV8_kZRggDA4RE/edit" target="_blank" class="table-btn">RestaurantWeek ENG</a>
-                <a href="https://docs.google.com/spreadsheets/d/1zHE3Q2NTdQ93CRPNhQ5cj4Fcf-5sSyreI_bLPOQUWCg/edit" target="_blank" class="table-btn">SalonWeek RU</a>
-                <a href="https://docs.google.com/spreadsheets/d/1WJMBRp7c5DyNVBMOvewnZ0spYknhlJxqlxDv513oWjg/edit" target="_blank" class="table-btn">SalonWeek ENG</a>
+        <div class="two-columns">
+            <!-- Левая колонка с генератором -->
+            <div class="column">
+                <div class="instructions">
+                    <h2>Инструкция по созданию промокода</h2>
+                    
+
+                    <div class="workflow-section">
+                        <ol>
+                            <li><h3>Создайте промокод на Tilda для выбранного мероприятия:</h3></li>
+
+                            <div class="tilda-section">
+                                
+                                <div class="button-group">
+                                    <div class="button-container">
+                                        <a href="https://tilda.ru/projects/payments/promocodes/?projectid=377338" target="_blank" class="tilda-btn restaurant-btn">
+                                            🍽️🇷🇺 Restaurantweek.ru
+                                        </a>
+                                        <a href="https://tilda.ru/projects/payments/promocodes/?projectid=822971" target="_blank" class="tilda-btn restaurant-btn">
+                                            🍽️🌍 Restaurantweek.pro
+                                        </a>
+                                    </div>
+                                    <div class="button-container">
+                                        <a href="https://tilda.ru/projects/payments/promocodes/?projectid=620177" target="_blank" class="tilda-btn salon-btn">
+                                            💅🇷🇺 Salonweek.ru
+                                        </a>
+                                        <a href="https://tilda.ru/projects/payments/promocodes/?projectid=6410618" target="_blank" class="tilda-btn salon-btn">
+                                            💅🌍 Dubaisalonweek.com
+                                        </a>
+                                    </div>
+                                </div>
+                                <p><a href="https://help-ru.tilda.cc/online-store/promo-codes" target="_blank" class="help-link">Инструкция по созданию промокода на Tilda</a></p>
+                                <p>Размер скидки для инфопартнеров: 5%</p>
+                                <p>Срок окончания действия: 3 день выбранной конференции</p>
+                                <p>Промокоды на Tilda для русскоязычной аудитории дубайского мероприятия создаются на российском сайте</p>
+
+
+                            
+                            </div>
+
+                            <li><h3>Создайте промокод в генераторе:</h3></li>
+
+                            <div class="generator-section">
+                                <div class="event-selector">
+                                    <label for="eventSelect">Выберите мероприятие:</label>
+                                    <select id="eventSelect">
+                                        <option value="event1">🇷🇺🍽️RestaurantWeek Moscow</option>
+                                        <option value="event2">🇷🇺🍽️RestaurantWeek Dubai RU</option>
+                                        <option value="event3">🌍🍽️RestaurantWeek Dubai ENG</option>
+                                        <option value="event4">🇷🇺💅SalonWeek Moscow</option>
+                                        <option value="event5">🇷🇺💅SalonWeek Dubai RU</option>
+                                        <option value="event6">🌍💅SalonWeek Dubai ENG</option>
+                                    </select>
+                                </div>
+    
+                                <div class="promo-input">
+                                    <label for="promoCode">Введите промокод:</label>
+                                    <input type="text" id="promoCode" placeholder="Введите промокод...">
+                                    <div id="promoDisplay"></div>
+                                </div>
+    
+                                <button id="createButton">Создать промокод</button>
+    
+                                <div class="result" id="result"></div>
+                            </div>
+
+                            <li><h3>Промокод появится в соответствующей мероприятию Google таблице:</h3></li>
+                            <div class="tables-section">
+                                <div class="button-group">
+                                    <div class="button-container">
+                                        <a href="https://docs.google.com/spreadsheets/d/1a5dNyJLA8rrJC1SYe1O9AfKElhHBtNjNO4SGvvU0gVc/edit?gid=846686742#gid=846686742" target="_blank" class="table-btn restaurant-btn">
+                                            🇷🇺🍽️ RestaurantWeek RU
+                                        </a>
+                                        <a href="https://docs.google.com/spreadsheets/d/1oyHD5ODFf5XvnlU-XWD3gCr99POTUYV8_kZRggDA4RE/edit?gid=1998772264#gid=1998772264" target="_blank" class="table-btn restaurant-btn">
+                                            🌍🍽️ RestaurantWeek ENG
+                                        </a>
+                                    </div>
+                                    <div class="button-container">
+                                        <a href="https://docs.google.com/spreadsheets/d/1zHE3Q2NTdQ93CRPNhQ5cj4Fcf-5sSyreI_bLPOQUWCg/edit?gid=1277136750#gid=1277136750" target="_blank" class="table-btn salon-btn">
+                                            🇷🇺💅 SalonWeek RU
+                                        </a>
+                                        <a href="https://docs.google.com/spreadsheets/d/1WJMBRp7c5DyNVBMOvewnZ0spYknhlJxqlxDv513oWjg/edit?gid=1252137763#gid=1252137763" target="_blank" class="table-btn salon-btn">
+                                            🌍💅 SalonWeek ENG
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <li><h3>Проверьте наличие таблицы для отслеживания в соответствующей папке:</h3></li>
+                        
+                        <div class="folders-section">
+                            <div class="button-group">
+                                <div class="button-container">
+                                    <a href="https://drive.google.com/drive/folders/1gQsv3SOKG7T2vWFZWrS1sheQqiNMR9Cd?usp=sharing" target="_blank" class="folder-btn restaurant-btn">
+                                        🍽️🇷🇺 MRWRU 📁
+                                    </a>
+                                    <a href="https://drive.google.com/drive/folders/16y0zKOtsroj3WIbb7t981pLE4k8P7Mgc?usp=sharing" target="_blank" class="folder-btn restaurant-btn">
+                                        🍽️🇷🇺 DRWRU 📁
+                                    </a>
+                                    <a href="https://drive.google.com/drive/folders/179Rg89Xcf9ScF7IWh-B8zg6Uf-IAOGNS?usp=sharing" target="_blank" class="folder-btn restaurant-btn">
+                                        🍽️🌍 DRWEN 📁
+                                    </a>
+                                </div>
+                                <div class="button-container">
+                                    <a href="https://drive.google.com/drive/folders/1YWXroQfI1i71OX7W3nWSMeOW4ZUPnERB?usp=sharing" target="_blank" class="folder-btn salon-btn">
+                                        💅🇷🇺 MSWRU 📁
+                                    </a>
+                                    <a href="https://drive.google.com/drive/folders/1uRjZ2oXI43csWK_gCk5nVAau4bqDIyh2?usp=sharing" target="_blank" class="folder-btn salon-btn">
+                                        💅🇷🇺 DSWRU 📁
+                                    </a>
+                                    <a href="https://drive.google.com/drive/folders/1kYi9z4-4lzokyYWog8TUkS0GC1UezsCR?usp=sharing" target="_blank" class="folder-btn salon-btn">
+                                        💅🌍 DSWEN 📁
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <li><h3>Поделитесь с инфопартнером ссылкой на его таблицу</h3></li>
+
+                    </ol>
+                        
+
+                     
+
+                      
+
+                    </div>
+
+                    <!-- Добавляем секции с кнопками внутри инструкции -->
+                    
+
+                   
+
+                    
+                </div>
             </div>
         </div>
-
-        <div class="folder-buttons">
-            <h2>Папки</h2>
-            <div class="button-group">
-                <a href="https://drive.google.com/drive/folders/1OpX-uC1sb7idS4DM_Zzy8vDSPoScT5Ec" target="_blank" class="folder-btn">MRW25</a>
-                <a href="https://drive.google.com/drive/folders/1ZPwanhmlGMahWJe3YQtEVZ6uOfHgkedz" target="_blank" class="folder-btn">MSW25</a>
-                <a href="https://drive.google.com/drive/folders/1-hYa-m3Oqu_cC4qEmPSBXrQdKa4gzUwo" target="_blank" class="folder-btn">DRW25 RU</a>
-                <a href="https://drive.google.com/drive/folders/1NEfH8e1C7gu9yAvVnjRNsJ4oqO3v4kSW" target="_blank" class="folder-btn">DSW25 RU</a>
-                <a href="https://drive.google.com/drive/folders/1iU10LR_0-1-4CMuLDRIoNCz3CnFG-T2w" target="_blank" class="folder-btn">DSW25 EN</a>
-                <a href="https://drive.google.com/drive/folders/1GKbPsJDmrxxaelsCR8IN-Q-FObVKpUDc" target="_blank" class="folder-btn">DRW25 EN</a>
-            </div>
-        </div>
-
-        <div class="event-selector">
-            <label for="eventSelect">Выберите мероприятие:</label>
-            <select id="eventSelect">
-                <option value="event1">RestaurantWeek Moscow</option>
-                <option value="event2">RestaurantWeek Dubai RU</option>
-                <option value="event3">RestaurantWeek Dubai ENG</option>
-                <option value="event4">SalonWeek Moscow</option>
-                <option value="event5">SalonWeek Dubai RU</option>
-                <option value="event6">SalonWeek Dubai ENG</option>
-            </select>
-        </div>
-
-        <div class="promo-input">
-            <label for="promoCode">Введите промокод:</label>
-            <input type="text" id="promoCode" placeholder="Введите промокод...">
-            <div id="promoDisplay"></div>
-        </div>
-
-        <button id="createButton">Создать промокод</button>
-
-        <div class="result" id="result"></div>
     </div>
     <script src="script.js"></script>
 </body>
