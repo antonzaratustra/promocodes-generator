@@ -254,6 +254,14 @@
             const row = document.createElement('tr');
             const promoCode = promo.promoCode; // Извлекаем promoCode из объекта
 
+            // Создаем URL для просмотра
+            const viewUrl = `referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promoCode}`;
+            const adminUrl = `${viewUrl}&admin=true`;
+
+            // Получаем полный URL сайта
+            const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', '');
+            const fullViewUrl = baseUrl + viewUrl;
+
             row.innerHTML = `
                 <td>${promoCode || '-'}</td>
                 <td>${getEventNameByCode(promo.eventCode)}</td>
@@ -262,13 +270,37 @@
                 <td>${promo.referralsCount || 0}</td>
                 <td>
                     <div class="action-buttons">
-                        <a href="referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promoCode}" 
-                           class="view-btn">Просмотр</a>
-                        <button class="delete-btn" data-id="${promo.id}">Удалить</button>
+                        <a href="${adminUrl}" class="view-btn">👁️ Просмотр</a>
+                        <button class="copy-btn" data-url="${fullViewUrl}">🔗 Ссылка</button>
+                        <button class="delete-btn" data-id="${promo.id}">🗑️ Удалить</button>
                     </div>
                 </td>
             `;
             tableBody.appendChild(row);
+        });
+
+        // Добавляем обработчики для кнопок
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = this.dataset.url;
+                navigator.clipboard.writeText(url).then(() => {
+                    const copyButton = document.createElement('button');
+                    copyButton.className = 'copy-button-success';
+                    copyButton.textContent = '✓ Скопировано!';
+                    setTimeout(() => {
+                        copyButton.remove();
+                    }, 2000);
+                    document.body.appendChild(copyButton);
+                }).catch(err => {
+                    const copyButton = document.createElement('button');
+                    copyButton.className = 'copy-button-error';
+                    copyButton.textContent = '⚠️ Ошибка копирования';
+                    setTimeout(() => {
+                        copyButton.remove();
+                    }, 2000);
+                    document.body.appendChild(copyButton);
+                });
+            });
         });
 
         // Добавляем обработчики для кнопок удаления
@@ -419,6 +451,60 @@
     </script>
 
     <style>
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .view-btn {
+        padding: 4px 8px;
+        background-color: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .copy-btn {
+        padding: 4px 8px;
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .delete-btn {
+        padding: 4px 8px;
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .copy-button-success {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
+    .copy-button-error {
+        background-color: #f44336;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+
     .loading {
         text-align: center;
         padding: 20px;
@@ -428,22 +514,16 @@
         display: inline-block;
         width: 20px;
         height: 20px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #3498db;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
         border-radius: 50%;
         animation: spin 1s linear infinite;
-        margin-right: 10px;
     }
 
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
-    .error-message a {
-        color: #3498db;
-        text-decoration: underline;
-    }
     </style>
 </body>
-</html> 
+</html>

@@ -7,6 +7,58 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="referrals.css">
     <script src="utils.js"></script>
+    <style>
+        /* Стили для новых кнопок */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-button {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .action-button.view {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .action-button.copy {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .action-button.delete {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .copy-button-success {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .copy-button-error {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -51,7 +103,6 @@
                         <th>Продукты</th>
                         <th>Имя купившего</th>
                         <th>Цена</th>
-                        <th>Страница</th>
                         <th>Email</th>
                         <th>Выплата</th>
                         <th>Оплачено</th>
@@ -60,7 +111,7 @@
                 <tbody id="referralsTableBody">
                     <!-- Данные будут загружены с помощью JavaScript -->
                     <tr class="loading-row">
-                        <td colspan="9">Загрузка данных...</td>
+                        <td colspan="8">Загрузка данных...</td>
                     </tr>
                 </tbody>
             </table>
@@ -222,6 +273,27 @@
             }
         }
 
+        // Функция для копирования ссылки
+        function copyLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button-success';
+                copyButton.textContent = '✓ Скопировано!';
+                setTimeout(() => {
+                    copyButton.remove();
+                }, 2000);
+                return copyButton;
+            }).catch(err => {
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-button-error';
+                copyButton.textContent = '⚠️ Ошибка копирования';
+                setTimeout(() => {
+                    copyButton.remove();
+                }, 2000);
+                return copyButton;
+            });
+        }
+
         // Функция для отображения таблицы рефералов
         function renderReferralsTable(data, eventCode, isAdmin) {
             console.log('Rendering referrals table with data:', JSON.stringify(data, null, 2));
@@ -240,7 +312,7 @@
                 console.log('No data to display');
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="no-data">
+                        <td colspan="7" class="no-data">
                             Данные не найдены. Это может быть связано с тем, что:
                             <ul>
                                 <li>По этому промокоду еще нет покупок</li>
@@ -268,13 +340,25 @@
                     ? `<input type="checkbox" class="paid-checkbox" data-orderid="${item.orderid}" ${item.isPaid ? 'checked' : ''}>`
                     : (item.isPaid ? '✅' : '⏳');
 
+                // Создаем URL для просмотра
+                const viewUrl = `${window.location.origin}${window.location.pathname}?event=${eventCode}&year=${new Date(item.sent).getFullYear()}&promo=${item.promocode}`;
+                const adminUrl = `${viewUrl}&admin=true`;
+
+                // Создаем кнопки действий
+                const actions = `
+                    <div class="action-buttons">
+                        <button onclick="window.location.href='${adminUrl}'" class="action-button view">👁️ Просмотр</button>
+                        <button onclick="copyLink('${viewUrl}')" class="action-button copy">🔗 Ссылка</button>
+                        ${isAdmin ? `<button onclick="deleteReferral('${item.orderid}')" class="action-button delete">🗑️ Удалить</button>` : ''}
+                    </div>
+                `;
+
                 console.log('Row data:', {
                     date: formatDate(item.sent),
                     orderId: orderId,
                     products: item.products,
                     name: item.name,
                     price: item.price,
-                    referer: formatReferer(item.referer),
                     email: item.email,
                     commission: commission,
                     paidContent: paidContent
@@ -286,7 +370,6 @@
                     <td>${item.products || '-'}</td>
                     <td>${item.name || '-'}</td>
                     <td>${item.price} ${currency}</td>
-                    <td>${formatReferer(item.referer)}</td>
                     <td>${item.email || '-'}</td>
                     <td>${commission.toFixed(2)} ${currency}</td>
                     <td>${paidContent}</td>
