@@ -706,6 +706,50 @@
                     throw new Error('Неизвестный тип мероприятия');
             }
         }
+
+        // Функция для сохранения состояния фильтров
+        function saveFilterState() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventCode = urlParams.get('event');
+            const year = urlParams.get('year');
+            
+            if (eventCode && year) {
+                localStorage.setItem('filterState', JSON.stringify({
+                    event: eventCode,
+                    year: year
+                }));
+            }
+        }
+
+        // Функция для восстановления состояния фильтров
+        function restoreFilterState() {
+            const savedState = localStorage.getItem('filterState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                if (state.event && !urlParams.get('event')) {
+                    urlParams.set('event', state.event);
+                }
+                if (state.year && !urlParams.get('year')) {
+                    urlParams.set('year', state.year);
+                }
+                
+                const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                if (newUrl !== window.location.href) {
+                    window.history.replaceState({}, '', newUrl);
+                    // Перезагружаем данные с новыми параметрами
+                    const promoCode = urlParams.get('promo');
+                    fetchReferralData(state.event, state.year, promoCode);
+                }
+            }
+        }
+
+        // Сохраняем состояние фильтров при загрузке страницы
+        saveFilterState();
+
+        // Восстанавливаем состояние фильтров при загрузке
+        restoreFilterState();
     </script>
 </body>
 </html>

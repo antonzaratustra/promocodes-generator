@@ -148,6 +148,49 @@
     
     <!-- Наши скрипты -->
     <script src="utils.js"></script>
+    <script>
+        // Функция для сохранения состояния фильтров
+        function saveFilterState() {
+            const eventFilter = document.getElementById('eventSelect').value;
+            const yearFilter = document.getElementById('yearSelect').value;
+            localStorage.setItem('filterState', JSON.stringify({
+                event: eventFilter,
+                year: yearFilter
+            }));
+        }
+
+        // Функция для восстановления состояния фильтров
+        function restoreFilterState() {
+            const savedState = localStorage.getItem('filterState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                const eventFilter = document.getElementById('eventSelect');
+                const yearFilter = document.getElementById('yearSelect');
+                
+                if (eventFilter && state.event) {
+                    eventFilter.value = state.event;
+                }
+                if (yearFilter && state.year) {
+                    yearFilter.value = state.year;
+                }
+            }
+        }
+
+        // Обработчик изменения года
+        const yearSelect = document.getElementById('yearSelect');
+        yearSelect.addEventListener('change', function() {
+            saveFilterState();
+        });
+
+        // Обработчик изменения мероприятия
+        const eventSelect = document.getElementById('eventSelect');
+        eventSelect.addEventListener('change', function() {
+            saveFilterState();
+        });
+
+        // Восстанавливаем состояние фильтров при загрузке
+        restoreFilterState();
+    </script>
     <script src="script.js"></script>
     <script src="router.js"></script>
 </body>

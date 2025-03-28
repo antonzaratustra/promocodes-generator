@@ -243,6 +243,9 @@
             // Заполняем выпадающий список с годами
             populateYearSelect();
             
+            // Восстанавливаем состояние фильтров после заполнения списка годов
+            restoreFilterState();
+            
             // Пробуем загрузить данные
             console.log('Начинаем загрузку промокодов...');
             
@@ -395,12 +398,40 @@
         });
     }
 
+    // Функция для сохранения состояния фильтров
+    function saveFilterState() {
+        const eventFilter = document.getElementById('eventFilter').value;
+        const yearFilter = document.getElementById('yearFilter').value;
+        localStorage.setItem('filterState', JSON.stringify({
+            event: eventFilter,
+            year: yearFilter
+        }));
+    }
+
+    // Функция для восстановления состояния фильтров
+    function restoreFilterState() {
+        const savedState = localStorage.getItem('filterState');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            const eventFilter = document.getElementById('eventFilter');
+            const yearFilter = document.getElementById('yearFilter');
+            
+            if (eventFilter && state.event) {
+                eventFilter.value = state.event;
+            }
+            if (yearFilter && state.year) {
+                yearFilter.value = state.year;
+            }
+        }
+    }
+
     // Обработчик фильтров
     document.getElementById('applyFilters').addEventListener('click', async function() {
         const eventFilter = document.getElementById('eventFilter').value;
         const yearFilter = document.getElementById('yearFilter').value;
         
-        console.log('Применяем фильтры:', { eventFilter, yearFilter });
+        // Сохраняем состояние фильтров
+        saveFilterState();
         
         try {
             // Показываем состояние загрузки
