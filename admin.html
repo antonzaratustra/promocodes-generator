@@ -15,6 +15,43 @@
 <body>
     <div class="container">
         <header class="admin-header">
+            <div class="header-actions">
+                <button onclick="window.location.href='index.html'" class="back-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                        <path d="M15.41 16.09l-4.58-4.59 4.58-4.59L14 5.5l-6 6 6 6z"/>
+                    </svg>
+                    Назад
+                </button>
+            </div>
+
+
+
+            <h1>Google Таблицы с заявками из Tilda</h1>
+
+
+
+            <div class="tables-section">
+                <div class="button-group">
+                    <div class="button-container">
+                        <a href="https://docs.google.com/spreadsheets/d/1a5dNyJLA8rrJC1SYe1O9AfKElhHBtNjNO4SGvvU0gVc/edit?gid=846686742#gid=846686742" target="_blank" class="table-btn restaurant-btn">
+                            🇷🇺🍽️ RestaurantWeek RU
+                        </a>
+                        <a href="https://docs.google.com/spreadsheets/d/1oyHD5ODFf5XvnlU-XWD3gCr99POTUYV8_kZRggDA4RE/edit?gid=1998772264#gid=1998772264" target="_blank" class="table-btn restaurant-btn">
+                            🌍🍽️ RestaurantWeek ENG
+                        </a>
+                    </div>
+                    <div class="button-container">
+                        <a href="https://docs.google.com/spreadsheets/d/1zHE3Q2NTdQ93CRPNhQ5cj4Fcf-5sSyreI_bLPOQUWCg/edit?gid=1277136750#gid=1277136750" target="_blank" class="table-btn salon-btn">
+                            🇷🇺💅 SalonWeek RU
+                        </a>
+                        <a href="https://docs.google.com/spreadsheets/d/1WJMBRp7c5DyNVBMOvewnZ0spYknhlJxqlxDv513oWjg/edit?gid=1252137763#gid=1252137763" target="_blank" class="table-btn salon-btn">
+                            🌍💅 SalonWeek ENG
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+
             <h1>Админ-панель промокодов</h1>
             <div class="filters">
                 <div class="filter-group">
@@ -39,6 +76,36 @@
                 <button id="applyFilters" class="filter-btn">Применить фильтры</button>
             </div>
         </header>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <main>
             <div class="promo-codes-container">
@@ -581,6 +648,34 @@
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .back-button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+    
+    .back-button:hover {
+        background-color: #45a049;
+    }
+    
+    .back-button svg {
+        width: 16px;
+        height: 16px;
     }
     </style>
 </body>
