@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const promoCode = urlParams.get('promo');
     const isAdmin = urlParams.get('admin') === 'true';
     
+    console.log('Event code:', eventCode);
+    
     // Функция для определения языка интерфейса
     function getInterfaceLanguage(eventCode) {
         if (eventCode === 'DSWEN' || eventCode === 'DRWEN') return 'en';
@@ -65,7 +67,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Заполняем информацию
-    document.getElementById('eventTitle').textContent = getEventNameByCode(eventCode);
+    console.log('Setting event title...');
+    const eventName = getEventNameByCode(eventCode);
+    console.log('Event name:', eventName);
+    document.getElementById('eventTitle').textContent = eventName;
+    
+    // Устанавливаем текст загрузки в таблице
+    const loadingText = document.getElementById('loadingText');
+    if (interfaceLang === 'en') {
+        loadingText.textContent = 'Loading data...';
+    } else {
+        loadingText.textContent = 'Загрузка данных...';
+    }
+    
     document.getElementById('yearLabel').textContent = texts.year;
     document.getElementById('promoLabel').textContent = texts.promo;
     document.getElementById('yearInfo').textContent = year;
@@ -102,11 +116,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Функция для преобразования кода мероприятия в читаемое название
     function getEventNameByCode(code) {
         const eventNames = {
-            'MRWRU': 'RestaurantWeek Moscow',
-            'DRWRU': 'RestaurantWeek Dubai',
+            'MRWRU': 'RestaurantWeek Москва',
+            'DRWRU': 'RestaurantWeek Дубай',
             'DRWEN': 'RestaurantWeek Dubai',
-            'MSWRU': 'SalonWeek Moscow',
-            'DSWRU': 'SalonWeek Dubai',
+            'MSWRU': 'SalonWeek Москва',
+            'DSWRU': 'SalonWeek Дубай',
             'DSWEN': 'SalonWeek Dubai'
         };
         
@@ -118,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const dataUrl = getDataUrl(eventCode);
             const tableBody = document.getElementById('referralsTableBody');
-            tableBody.innerHTML = `<tr><td colspan="9" class="loading-cell">Загрузка данных...</td></tr>`;
             
             const response = await fetch(`${dataUrl}?eventCode=${eventCode}&year=${year}&promoCode=${promoCode}`, {
                 method: 'GET',

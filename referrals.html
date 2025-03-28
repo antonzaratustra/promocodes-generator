@@ -63,7 +63,7 @@
 <body>
     <div class="container">
         <header>
-            <h1 id="eventTitle">Загрузка...</h1>
+            <h1 id="eventTitle"></h1>
             <!-- <a href="index.html" class="back-link">← Вернуться к генератору</a> -->
         </header>
         
@@ -111,7 +111,7 @@
                 <tbody id="referralsTableBody">
                     <!-- Данные будут загружены с помощью JavaScript -->
                     <tr class="loading-row">
-                        <td colspan="8">Загрузка данных...</td>
+                        <td colspan="8" id="loadingText">Загрузка данных...</td>
                     </tr>
                 </tbody>
             </table>
@@ -145,6 +145,7 @@
                 document.getElementById('headerEmail').textContent = 'Email';
                 document.getElementById('headerCommission').textContent = 'Commission';
                 document.getElementById('headerPaid').textContent = 'Paid';
+                document.getElementById('loadingText').textContent = 'Loading data...';
             }
         }
 
@@ -155,8 +156,10 @@
         const promoCode = urlParams.get('promo');
         const isAdmin = urlParams.get('admin') === 'true';
 
-        // Устанавливаем язык сразу при загрузке страницы
+        // Устанавливаем название мероприятия в заголовок
         if (eventCode) {
+            const eventName = getEventNameByCode(eventCode);
+            document.getElementById('eventTitle').innerText = eventName;
             setLanguage(eventCode);
         }
 
@@ -172,7 +175,6 @@
             `;
         } else {
             // Заполняем информацию на странице
-            document.getElementById('eventTitle').textContent = getEventNameByCode(eventCode);
             document.getElementById('yearInfo').textContent = year;
             document.getElementById('promoInfo').textContent = promoCode;
             
@@ -182,12 +184,12 @@
 
         function getEventNameByCode(code) {
             const eventNames = {
-                'MRWRU': 'RestaurantWeek Moscow',
-                'DRWRU': 'RestaurantWeek Dubai RU',
-                'DRWEN': 'RestaurantWeek Dubai ENG',
-                'MSWRU': 'SalonWeek Moscow',
-                'DSWRU': 'SalonWeek Dubai RU',
-                'DSWEN': 'SalonWeek Dubai ENG'
+                'MRWRU': 'RestaurantWeek Москва',
+                'DRWRU': 'RestaurantWeek Дубай',
+                'DRWEN': 'RestaurantWeek Dubai',
+                'MSWRU': 'SalonWeek Москва',
+                'DSWRU': 'SalonWeek Дубай',
+                'DSWEN': 'SalonWeek Dubai'
             };
             return eventNames[code] || 'Неизвестное мероприятие';
         }
@@ -195,6 +197,10 @@
         // Функция для получения данных рефералов
         async function fetchReferralData(eventCode, year, promoCode) {
             try {
+                // Устанавливаем текст загрузки в таблице
+                const loadingText = document.getElementById('loadingText');
+                loadingText.textContent = eventCode.endsWith('EN') ? 'Loading data...' : 'Загрузка данных';
+                
                 const webhookUrl = getWebhookUrl(eventCode);
                 const url = new URL(webhookUrl);
                 
@@ -343,11 +349,19 @@
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="7" class="no-data">
-                            Данные не найдены. Это может быть связано с тем, что:
+                            ${eventCode.endsWith('EN') 
+                                ? 'No data found. This may be because:'
+                                : 'Данные не найдены. Это может быть связано с тем, что:'}
                             <ul>
-                                <li>По этому промокоду еще нет покупок</li>
-                                <li>Данные еще не синхронизированы</li>
-                                <li>Возникла временная ошибка связи с сервером</li>
+                                <li>${eventCode.endsWith('EN') 
+                                    ? 'No purchases have been made with this promo code yet'
+                                    : 'По этому промокоду еще нет покупок'}</li>
+                                <li>${eventCode.endsWith('EN') 
+                                    ? 'The data has not been synchronized yet'
+                                    : 'Данные еще не синхронизированы'}</li>
+                                <li>${eventCode.endsWith('EN') 
+                                    ? 'There was a temporary server connection error'
+                                    : 'Возникла временная ошибка связи с сервером'}</li>
                             </ul>
                         </td>
                     </tr>
