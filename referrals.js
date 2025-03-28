@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!data || data.length === 0) {
             document.getElementById('totalPaid').textContent = '0';
             document.getElementById('totalPending').textContent = '0';
-            document.getElementById('totalCommission').textContent = '0';
+            document.getElementById('totalCommission').textContent = '0 человек';
             return;
         }
         
@@ -170,11 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Рассчитываем статистику
         const totalPaid = data.reduce((sum, item) => sum + (item.isPaid ? parseFloat(item.price) : 0), 0);
         const totalPending = data.reduce((sum, item) => sum + (!item.isPaid ? parseFloat(item.price) : 0), 0);
-        const totalCommission = data.reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
+        const totalPeople = data.length;
 
+        // Форматируем вывод
         document.getElementById('totalPaid').textContent = `${totalPaid.toFixed(2)} ${currency}`;
         document.getElementById('totalPending').textContent = `${totalPending.toFixed(2)} ${currency}`;
-        document.getElementById('totalCommission').textContent = `${totalCommission.toFixed(2)} ${currency}`;
+        document.getElementById('totalCommission').textContent = `${totalPeople} человек`;
     }
     
     // Вспомогательные функции

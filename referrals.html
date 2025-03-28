@@ -264,7 +264,10 @@
                 } else {
                     console.log('No data received');
                     renderReferralsTable([], eventCode, isAdmin);
-                    updateStats(eventCode);
+                    // Устанавливаем статистику в 0
+                    document.getElementById('totalPaid').textContent = '0';
+                    document.getElementById('totalPending').textContent = '0';
+                    document.getElementById('totalCommission').textContent = '0 человек';
                 }
 
             } catch (error) {
@@ -400,11 +403,24 @@
             const data = [];
             const rows = tableBody.getElementsByTagName('tr');
             
+            // Проверяем, есть ли строки с данными
+            if (rows.length === 0 || rows[0].classList.contains('no-data')) {
+                return [];
+            }
+            
             for (let row of rows) {
+                // Проверяем, что это строка с данными (не строка "Данные не найдены")
+                if (row.classList.contains('no-data')) {
+                    continue;
+                }
+
                 // Проверяем, есть ли чекбокс (админ режим)
                 const checkbox = row.querySelector('input[type="checkbox"]');
                 const isPaid = checkbox ? checkbox.checked : row.cells[row.cells.length - 1].textContent === '✅';
-                const price = parseFloat(row.cells[4].textContent.replace(/[^\d.]/g, ''));
+                
+                // Безопасно получаем цену
+                const priceCell = row.cells[4];
+                const price = priceCell ? parseFloat(priceCell.textContent.replace(/[^\d.]/g, '')) : 0;
                 
                 data.push({
                     price: price,
@@ -432,9 +448,14 @@
             // Считаем количество привлеченных людей
             const totalPeople = data.length;
 
-            document.getElementById('totalPaid').textContent = `${totalPaid.toFixed(2)} ${currency}`;
-            document.getElementById('totalPending').textContent = `${totalPending.toFixed(2)} ${currency}`;
-            document.getElementById('totalCommission').textContent = `${totalPeople} человек`;
+            // Если данных нет, устанавливаем 0
+            const paidValue = totalPaid > 0 ? `${totalPaid.toFixed(2)} ${currency}` : '0';
+            const pendingValue = totalPending > 0 ? `${totalPending.toFixed(2)} ${currency}` : '0';
+            const peopleValue = totalPeople > 0 ? `${totalPeople} человек` : '0 человек';
+
+            document.getElementById('totalPaid').textContent = paidValue;
+            document.getElementById('totalPending').textContent = pendingValue;
+            document.getElementById('totalCommission').textContent = peopleValue;
         }
 
         async function updatePaymentStatus(orderId, isPaid, data) {
