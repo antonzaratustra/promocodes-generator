@@ -6,7 +6,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const promoCode = urlParams.get('promo');
     const isAdmin = urlParams.get('admin') === 'true';
     
+    // Функция для определения языка интерфейса
+    function getInterfaceLanguage(eventCode) {
+        if (eventCode === 'DSWEN' || eventCode === 'DRWEN') return 'en';
+        return 'ru';
+    }
+
+    // Функция для получения текстов интерфейса
+    function getInterfaceTexts(lang) {
+        return {
+            'ru': {
+                year: 'Год:',
+                promo: 'Промокод:',
+                totalPaid: 'Всего выплачено:',
+                totalPending: 'Всего к выплате:',
+                totalCommission: 'Всего привлечено:',
+                tableHeaders: [
+                    'Время оплаты',
+                    'ID заказа',
+                    'Продукты',
+                    'Имя купившего',
+                    'Цена',
+                    'Email',
+                    'Выплата',
+                    'Оплачено'
+                ]
+            },
+            'en': {
+                year: 'Year:',
+                promo: 'Promo code:',
+                totalPaid: 'Total paid:',
+                totalPending: 'Total pending:',
+                totalCommission: 'Total referrals:',
+                tableHeaders: [
+                    'Payment time',
+                    'Order ID',
+                    'Products',
+                    'Buyer name',
+                    'Price',
+                    'Email',
+                    'Commission',
+                    'Paid'
+                ]
+            }
+        }[lang];
+    }
+    
+    // Определяем язык интерфейса
+    const interfaceLang = getInterfaceLanguage(eventCode);
+    const texts = getInterfaceTexts(interfaceLang);
+    
     console.log('Admin mode:', isAdmin);
+    console.log('Interface language:', interfaceLang);
     
     if (!eventCode || !year || !promoCode) {
         showError('Отсутствуют необходимые параметры в URL');
@@ -15,11 +66,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Заполняем информацию
     document.getElementById('eventTitle').textContent = getEventNameByCode(eventCode);
+    document.getElementById('yearLabel').textContent = texts.year;
+    document.getElementById('promoLabel').textContent = texts.promo;
     document.getElementById('yearInfo').textContent = year;
     document.getElementById('promoInfo').textContent = promoCode;
     
-    // Получаем данные
-    fetchReferralData(eventCode, year, promoCode, isAdmin);
+    // Обновляем заголовки таблицы
+    const headers = document.querySelectorAll('#referralsTable thead th');
+    headers.forEach((header, index) => {
+        if (index < texts.tableHeaders.length) {
+            header.textContent = texts.tableHeaders[index];
+        }
+    });
+    
+    // Обновляем заголовки статистики
+    document.getElementById('totalPaidLabel').textContent = texts.totalPaid;
+    document.getElementById('totalPendingLabel').textContent = texts.totalPending;
+    document.getElementById('totalCommissionLabel').textContent = texts.totalCommission;
+    
+    // Обновляем текст кнопок
+    const viewButtons = document.querySelectorAll('.action-button.view');
+    const copyButtons = document.querySelectorAll('.action-button.copy');
+    const deleteButtons = document.querySelectorAll('.action-button.delete');
+    
+    if (interfaceLang === 'en') {
+        viewButtons.forEach(btn => btn.textContent = '👁️ View');
+        copyButtons.forEach(btn => btn.textContent = '🔗 Copy link');
+        deleteButtons.forEach(btn => btn.textContent = '🗑️ Delete');
+    } else {
+        viewButtons.forEach(btn => btn.textContent = '👁️ Просмотр');
+        copyButtons.forEach(btn => btn.textContent = '🔗 Ссылка');
+        deleteButtons.forEach(btn => btn.textContent = '🗑️ Удалить');
+    }
     
     // Функция для преобразования кода мероприятия в читаемое название
     function getEventNameByCode(code) {
@@ -126,16 +204,29 @@ document.addEventListener('DOMContentLoaded', function() {
             // Обработка orderid
             const orderId = item.orderid ? String(item.orderid).toUpperCase() : '-';
             
+            // Формируем URL для просмотра
+            const adminUrl = `index.html?event=${eventCode}&year=${year}&promo=${promoCode}&admin=true`;
+            const viewUrl = `referrals.html?event=${eventCode}&year=${year}&promo=${promoCode}`;
+            
+            // Создаем кнопки действий
+            const actions = `
+                <div class="action-buttons">
+                    <button onclick="window.location.href='${adminUrl}'" class="action-button view">👁️ View</button>
+                    <button onclick="copyLink('${viewUrl}'); return false;" class="action-button copy">🔗 Copy link</button>
+                    ${isAdmin ? `<button onclick="deleteReferral('${item.orderid}'); return false;" class="action-button delete">🗑️ Delete</button>` : ''}
+                </div>
+            `;
+            
             row.innerHTML = `
                 <td>${formatDate(item.sent)}</td>
                 <td>${orderId}</td>
                 <td>${item.products || '-'}</td>
                 <td>${item.name || '-'}</td>
-                <td>${item.price} ${currency}</td>
-                <td>${formatReferer(item.referer)}</td>
+                <td>${parseFloat(item.price).toFixed(2)} ${currency}</td>
                 <td>${item.email || '-'}</td>
                 <td>${commission.toFixed(2)} ${currency}</td>
                 <td>${paidContent}</td>
+                <td>${actions}</td>
             `;
             
             tableBody.appendChild(row);
@@ -157,25 +248,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Функция для обновления статистики
     function updateStats(data, eventCode) {
-        if (!data || data.length === 0) {
-            document.getElementById('totalPaid').textContent = '0';
-            document.getElementById('totalPending').textContent = '0';
-            document.getElementById('totalCommission').textContent = '0 человек';
-            return;
-        }
-        
         // Определяем валюту
         const currency = eventCode.endsWith('EN') ? '$' : '₽';
         
-        // Рассчитываем статистику
-        const totalPaid = data.reduce((sum, item) => sum + (item.isPaid ? parseFloat(item.price) : 0), 0);
-        const totalPending = data.reduce((sum, item) => sum + (!item.isPaid ? parseFloat(item.price) : 0), 0);
-        const totalPeople = data.length;
+        // Инициализируем значения по умолчанию
+        let paidValue = '0';
+        let pendingValue = '0';
+        let peopleValue = '0';
+        
+        if (data && data.length > 0) {
+            // Рассчитываем статистику
+            const totalPaid = data.reduce((sum, item) => sum + (item.isPaid ? parseFloat(item.price) : 0), 0);
+            const totalPending = data.reduce((sum, item) => sum + (!item.isPaid ? parseFloat(item.price) : 0), 0);
+            const totalPeople = data.length;
 
-        // Форматируем вывод
-        document.getElementById('totalPaid').textContent = `${totalPaid.toFixed(2)} ${currency}`;
-        document.getElementById('totalPending').textContent = `${totalPending.toFixed(2)} ${currency}`;
-        document.getElementById('totalCommission').textContent = `${totalPeople} человек`;
+            // Форматируем вывод
+            paidValue = totalPaid > 0 ? `${totalPaid.toFixed(2)} ${currency}` : '0';
+            pendingValue = totalPending > 0 ? `${totalPending.toFixed(2)} ${currency}` : '0';
+            const peopleSuffix = interfaceLang === 'en' ? 'people' : 'человек';
+            peopleValue = totalPeople > 0 ? `${totalPeople} ${peopleSuffix}` : '0';
+        }
+
+        // Обновляем DOM
+        document.getElementById('totalPaid').textContent = paidValue;
+        document.getElementById('totalPending').textContent = pendingValue;
+        document.getElementById('totalCommission').textContent = peopleValue;
     }
     
     // Вспомогательные функции
@@ -274,30 +371,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function updatePaymentStatus(orderId, isPaid) {
         try {
-            const dataUrl = getDataUrl(eventCode);
-            const response = await fetch(dataUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: 'updatePayment',
-                    orderId: orderId,
-                    isPaid: isPaid
-                })
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventCode = urlParams.get('event');
+            const year = urlParams.get('year');
+            const promoCode = urlParams.get('promo');
+
+            const webhookUrl = getWebhookUrl(eventCode);
+            const url = new URL(webhookUrl);
+            
+            // Добавляем параметры в URL
+            url.searchParams.append('mode', 'updatePayment');
+            url.searchParams.append('eventCode', eventCode);
+            url.searchParams.append('year', year);
+            url.searchParams.append('promoCode', promoCode);
+            url.searchParams.append('orderId', orderId);
+            url.searchParams.append('isPaid', isPaid);
+
+            console.log('Updating payment status for orderId:', orderId, 'to', isPaid);
+            console.log('Request URL:', url.toString());
+
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                mode: 'no-cors'
             });
 
-            const result = await response.json();
-            if (result.success) {
-                console.log('Статус оплаты обновлен:', result);
-                // Перезагружаем данные после успешного обновления
-                fetchReferralData(eventCode, year, promoCode, isAdmin);
-            } else {
-                console.error('Ошибка обновления статуса:', result.error);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const textData = await response.text();
+            console.log('Received text data:', textData);
+            
+            try {
+                const parsedData = JSON.parse(JSON.parse(textData));
+                console.log('Parsed data:', parsedData);
+                
+                if (parsedData.error) {
+                    throw new Error(parsedData.error);
+                }
+
+                // Обновляем таблицу и статистику
+                const data = parsedData.data || [];
+                renderReferralsTable(data, eventCode, true);
+                updateStats(data, eventCode);
+
+            } catch (parseError) {
+                console.error('Ошибка парсинга ответа:', parseError);
+                throw new Error('Ошибка обновления статуса оплаты');
+            }
+
         } catch (error) {
-            console.error('Ошибка при обновлении статуса:', error);
-            showError('Ошибка при обновлении статуса оплаты');
+            console.error('Ошибка при обновлении статуса оплаты:', error);
+            showError('Ошибка при обновлении статуса оплаты: ' + error.message);
         }
     }
+    
+    // Получаем данные
+    fetchReferralData(eventCode, year, promoCode, isAdmin);
 }); 

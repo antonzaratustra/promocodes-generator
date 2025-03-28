@@ -70,25 +70,25 @@
         <div class="referral-info">
             <div class="info-box">
                 <div class="info-item">
-                    <strong>Год:</strong>
+                    <strong id="yearLabel">Год:</strong>
                     <span id="yearInfo">-</span>
                 </div>
                 <div class="info-item">
-                    <strong>Промокод:</strong>
+                    <strong id="promoLabel">Промокод:</strong>
                     <span id="promoInfo">-</span>
                 </div>
             </div>
             <div class="stats-box">
                 <div class="stat-item">
-                    <span class="stat-label">Всего выплачено:</span>
+                    <span class="stat-label" id="totalPaidLabel">Всего выплачено:</span>
                     <span id="totalPaid" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Всего к выплате:</span>
+                    <span class="stat-label" id="totalPendingLabel">Всего к выплате:</span>
                     <span id="totalPending" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Всего привлечено:</span>
+                    <span class="stat-label" id="totalCommissionLabel">Всего привлечено:</span>
                     <span id="totalCommission" class="stat-value">-</span>
                 </div>
             </div>
@@ -98,14 +98,14 @@
             <table id="referralsTable" class="referrals-table">
                 <thead>
                     <tr>
-                        <th>Время оплаты</th>
-                        <th>ID заказа</th>
-                        <th>Продукты</th>
-                        <th>Имя купившего</th>
-                        <th>Цена</th>
-                        <th>Email</th>
-                        <th>Выплата</th>
-                        <th>Оплачено</th>
+                        <th id="headerTime">Время оплаты</th>
+                        <th id="headerOrderId">ID заказа</th>
+                        <th id="headerProducts">Продукты</th>
+                        <th id="headerBuyer">Имя купившего</th>
+                        <th id="headerPrice">Цена</th>
+                        <th id="headerEmail">Email</th>
+                        <th id="headerCommission">Выплата</th>
+                        <th id="headerPaid">Оплачено</th>
                     </tr>
                 </thead>
                 <tbody id="referralsTableBody">
@@ -331,6 +331,23 @@
             const currency = eventCode.endsWith('EN') ? '$' : '₽';
             console.log('Using currency:', currency);
 
+            // Переводим заголовки таблицы в зависимости от языка
+            if (eventCode.endsWith('EN')) {
+                document.getElementById('yearLabel').textContent = 'Year:';
+                document.getElementById('promoLabel').textContent = 'Promo code:';
+                document.getElementById('totalPaidLabel').textContent = 'Total paid:';
+                document.getElementById('totalPendingLabel').textContent = 'Total pending:';
+                document.getElementById('totalCommissionLabel').textContent = 'Total referrals:';
+                document.getElementById('headerTime').textContent = 'Payment time';
+                document.getElementById('headerOrderId').textContent = 'Order ID';
+                document.getElementById('headerProducts').textContent = 'Products';
+                document.getElementById('headerBuyer').textContent = 'Buyer name';
+                document.getElementById('headerPrice').textContent = 'Price';
+                document.getElementById('headerEmail').textContent = 'Email';
+                document.getElementById('headerCommission').textContent = 'Commission';
+                document.getElementById('headerPaid').textContent = 'Paid';
+            }
+
             data.forEach((item, index) => {
                 console.log(`Processing table item #${index}:`, JSON.stringify(item, null, 2));
                 const commission = parseFloat(item.price) * 0.05;
@@ -350,9 +367,9 @@
                 // Создаем кнопки действий
                 const actions = `
                     <div class="action-buttons">
-                        <button onclick="window.location.href='${adminUrl}'" class="action-button view">👁️ Просмотр</button>
-                        <button onclick="copyLink('${viewUrl}')" class="action-button copy">🔗 Ссылка</button>
-                        ${isAdmin ? `<button onclick="deleteReferral('${item.orderid}')" class="action-button delete">🗑️ Удалить</button>` : ''}
+                        <button onclick="window.location.href='${adminUrl}'" class="action-button view">👁️ View</button>
+                        <button onclick="copyLink('${viewUrl}')" class="action-button copy">🔗 Copy link</button>
+                        ${isAdmin ? `<button onclick="deleteReferral('${item.orderid}')" class="action-button delete">🗑️ Delete</button>` : ''}
                     </div>
                 `;
 
@@ -446,12 +463,16 @@
                 .reduce((sum, item) => sum + item.price * 0.05, 0);
 
             // Считаем количество привлеченных людей
-            const totalPeople = data.length;
+            let totalPeople = data.length;
 
             // Если данных нет, устанавливаем 0
             const paidValue = totalPaid > 0 ? `${totalPaid.toFixed(2)} ${currency}` : '0';
             const pendingValue = totalPending > 0 ? `${totalPending.toFixed(2)} ${currency}` : '0';
-            const peopleValue = totalPeople > 0 ? `${totalPeople} человек` : '0 человек';
+            let peopleValue = totalPeople > 0 ? `${totalPeople} человек` : '0 человек';
+
+            if (eventCode.endsWith('EN')) {
+                peopleValue = totalPeople > 0 ? `${totalPeople} people` : '0 people';
+            }
 
             document.getElementById('totalPaid').textContent = paidValue;
             document.getElementById('totalPending').textContent = pendingValue;
