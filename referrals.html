@@ -126,13 +126,40 @@
     
     <!-- Наши скрипты -->
     <script>
+        // Функция для определения языка и установки соответствующих меток
+        function setLanguage(eventCode) {
+            const isEnglish = eventCode.endsWith('EN');
+            
+            // Устанавливаем метки на английском, если это английская версия
+            if (isEnglish) {
+                document.getElementById('yearLabel').textContent = 'Year:';
+                document.getElementById('promoLabel').textContent = 'Promo code:';
+                document.getElementById('totalPaidLabel').textContent = 'Total paid:';
+                document.getElementById('totalPendingLabel').textContent = 'Total pending:';
+                document.getElementById('totalCommissionLabel').textContent = 'Total referrals:';
+                document.getElementById('headerTime').textContent = 'Payment time';
+                document.getElementById('headerOrderId').textContent = 'Order ID';
+                document.getElementById('headerProducts').textContent = 'Products';
+                document.getElementById('headerBuyer').textContent = 'Buyer name';
+                document.getElementById('headerPrice').textContent = 'Price';
+                document.getElementById('headerEmail').textContent = 'Email';
+                document.getElementById('headerCommission').textContent = 'Commission';
+                document.getElementById('headerPaid').textContent = 'Paid';
+            }
+        }
+
         // Получаем параметры из URL
         const urlParams = new URLSearchParams(window.location.search);
         const eventCode = urlParams.get('event');
         const year = urlParams.get('year');
         const promoCode = urlParams.get('promo');
         const isAdmin = urlParams.get('admin') === 'true';
-        
+
+        // Устанавливаем язык сразу при загрузке страницы
+        if (eventCode) {
+            setLanguage(eventCode);
+        }
+
         console.log('Admin mode:', isAdmin);
         
         if (!eventCode || !year || !promoCode) {
@@ -330,23 +357,6 @@
 
             const currency = eventCode.endsWith('EN') ? '$' : '₽';
             console.log('Using currency:', currency);
-
-            // Переводим заголовки таблицы в зависимости от языка
-            if (eventCode.endsWith('EN')) {
-                document.getElementById('yearLabel').textContent = 'Year:';
-                document.getElementById('promoLabel').textContent = 'Promo code:';
-                document.getElementById('totalPaidLabel').textContent = 'Total paid:';
-                document.getElementById('totalPendingLabel').textContent = 'Total pending:';
-                document.getElementById('totalCommissionLabel').textContent = 'Total referrals:';
-                document.getElementById('headerTime').textContent = 'Payment time';
-                document.getElementById('headerOrderId').textContent = 'Order ID';
-                document.getElementById('headerProducts').textContent = 'Products';
-                document.getElementById('headerBuyer').textContent = 'Buyer name';
-                document.getElementById('headerPrice').textContent = 'Price';
-                document.getElementById('headerEmail').textContent = 'Email';
-                document.getElementById('headerCommission').textContent = 'Commission';
-                document.getElementById('headerPaid').textContent = 'Paid';
-            }
 
             data.forEach((item, index) => {
                 console.log(`Processing table item #${index}:`, JSON.stringify(item, null, 2));
