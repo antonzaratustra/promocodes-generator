@@ -122,11 +122,26 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="success">
                 Промокод успешно создан!
                 <p>Ссылка для просмотра рефералов: 
-                    <span id="referralLink">${fullUrl}</span>
+                    <a href="${fullUrl}" target="_blank" id="referralLink" class="referral-link">${fullUrl}</a>
                 </p>
                 <button id="copyButton" class="copy-button">Копировать ссылку</button>
             </div>
         `;
+
+        // Добавляем стили для ссылки
+        const style = document.createElement('style');
+        style.textContent = `
+            .referral-link {
+                color: #0066cc;
+                text-decoration: none;
+                font-weight: bold;
+                word-break: break-all;
+            }
+            .referral-link:hover {
+                text-decoration: underline;
+            }
+        `;
+        document.head.appendChild(style);
 
         // Обработчик для кнопки копирования
         document.getElementById('copyButton').addEventListener('click', function() {
