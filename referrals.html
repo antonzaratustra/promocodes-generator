@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Просмотр рефералов</title>
+    <title id="pageTitle">E2 Referrals</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="referrals.css">
     <script src="utils.js"></script>
@@ -145,7 +145,24 @@
                 document.getElementById('headerEmail').textContent = 'Email';
                 document.getElementById('headerCommission').textContent = 'Commission';
                 document.getElementById('headerPaid').textContent = 'Paid';
+                document.getElementById('pageTitle').textContent = 'E2 Referrals';
                 document.getElementById('loadingText').textContent = 'Loading data...';
+            } else {
+                document.getElementById('yearLabel').textContent = 'Год:';
+                document.getElementById('promoLabel').textContent = 'Промокод:';
+                document.getElementById('totalPaidLabel').textContent = 'Выплачено:';
+                document.getElementById('totalPendingLabel').textContent = 'К оплате:';
+                document.getElementById('totalCommissionLabel').textContent = 'Людей привлечено:';
+                document.getElementById('headerTime').textContent = 'Время оплаты';
+                document.getElementById('headerOrderId').textContent = 'ID заказа';
+                document.getElementById('headerProducts').textContent = 'Продукты';
+                document.getElementById('headerBuyer').textContent = 'Имя купившего';
+                document.getElementById('headerPrice').textContent = 'Цена';
+                document.getElementById('headerEmail').textContent = 'Email';
+                document.getElementById('headerCommission').textContent = 'Выплата';
+                document.getElementById('headerPaid').textContent = 'Оплачено';
+                document.getElementById('pageTitle').textContent = 'E2 Referrals';
+                document.getElementById('loadingText').textContent = 'Загрузка данных...';
             }
         }
 
@@ -232,7 +249,19 @@
                 const parsedData = JSON.parse(JSON.parse(textData));
                 console.log('Parsed data:', JSON.stringify(parsedData, null, 2));
                 
+                // Проверяем наличие ошибки в ответе
                 if (parsedData.error) {
+                    console.log('Error received from server:', parsedData.error);
+                    // Если ошибка связана с отсутствием столбца promocode, показываем пустую таблицу
+                    if (parsedData.error.includes('Столбец "promocode" не найден')) {
+                        console.log('No promocode column found, showing empty table');
+                        renderReferralsTable([], eventCode, isAdmin);
+                        // Устанавливаем статистику в 0
+                        document.getElementById('totalPaid').textContent = '0';
+                        document.getElementById('totalPending').textContent = '0';
+                        document.getElementById('totalCommission').textContent = eventCode.endsWith('EN') ? '0 people' : '0 человек';
+                        return;
+                    }
                     throw new Error(parsedData.error);
                 }
 
@@ -240,7 +269,20 @@
                 const rawData = parsedData.data || [];
                 console.log('Raw data:', JSON.stringify(rawData, null, 2));
                 console.log('Raw data length:', rawData.length);
+
+                // Проверяем наличие хотя бы одного элемента с полем promocode
+                const hasPromoCode = rawData.some(item => item && item.promocode !== undefined);
                 
+                if (!hasPromoCode) {
+                    console.log('Нет данных с полем promocode, показываем пустую таблицу');
+                    renderReferralsTable([], eventCode, isAdmin);
+                    // Устанавливаем статистику в 0
+                    document.getElementById('totalPaid').textContent = '0';
+                    document.getElementById('totalPending').textContent = '0';
+                    document.getElementById('totalCommission').textContent = eventCode.endsWith('EN') ? '0 people' : '0 человек';
+                    return;
+                }
+
                 // Обрабатываем данные перед отображением
                 const processedData = Array.isArray(rawData) ? rawData.map(async item => {
                     console.log('Processing item:', JSON.stringify(item, null, 2));
@@ -300,7 +342,7 @@
                     // Устанавливаем статистику в 0
                     document.getElementById('totalPaid').textContent = '0';
                     document.getElementById('totalPending').textContent = '0';
-                    document.getElementById('totalCommission').textContent = '0 человек';
+                    document.getElementById('totalCommission').textContent = eventCode.endsWith('EN') ? '0 people' : '0 человек';
                 }
 
             } catch (error) {
@@ -492,11 +534,7 @@
             // Если данных нет, устанавливаем 0
             const paidValue = totalPaid > 0 ? `${totalPaid.toFixed(2)} ${currency}` : '0';
             const pendingValue = totalPending > 0 ? `${totalPending.toFixed(2)} ${currency}` : '0';
-            let peopleValue = totalPeople > 0 ? `${totalPeople} человек` : '0 человек';
-
-            if (eventCode.endsWith('EN')) {
-                peopleValue = totalPeople > 0 ? `${totalPeople} people` : '0 people';
-            }
+            let peopleValue = totalPeople > 0 ? `${totalPeople} ${eventCode.endsWith('EN') ? 'people' : 'человек'}` : `${eventCode.endsWith('EN') ? '0 people' : '0 человек'}`;
 
             document.getElementById('totalPaid').textContent = paidValue;
             document.getElementById('totalPending').textContent = pendingValue;
