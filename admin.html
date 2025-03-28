@@ -354,13 +354,12 @@
             } else if (eventFilter !== 'all') {
                 console.log('Применяем только фильтр мероприятия:', eventFilter);
                 query = query
-                    .where('eventCode', '==', eventFilter)
-                    .orderBy('createdAt', 'desc');
+                    .where('eventCode', '==', eventFilter);
             } else if (yearFilter !== 'all') {
                 console.log('Применяем только фильтр года:', yearFilter);
                 query = query
                     .where('year', '==', yearFilter)
-                    .orderBy('createdAt', 'desc');
+                    .orderBy('year', 'desc');
             } else {
                 console.log('Загружаем все промокоды без фильтров');
                 query = query.orderBy('createdAt', 'desc');
@@ -384,6 +383,15 @@
                     ...doc.data()
                 });
             });
+            
+            // Сортируем данные в JavaScript, если не было сортировки в Firebase
+            if (eventFilter !== 'all' && yearFilter === 'all') {
+                promoCodes.sort((a, b) => {
+                    const dateA = new Date(a.createdAt).getTime();
+                    const dateB = new Date(b.createdAt).getTime();
+                    return dateB - dateA; // Сортировка по убыванию
+                });
+            }
             
             console.log('Отображаем', promoCodes.length, 'промокодов');
             renderPromoCodes(promoCodes);
