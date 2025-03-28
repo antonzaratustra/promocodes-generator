@@ -456,6 +456,28 @@
             console.error('Ошибка при загрузке данных:', error);
         }
     }
+
+    // Добавляем функцию генерации промокода
+    function generatePromoCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+
+    // Функция показа уведомления
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
     </script>
 
     <style>
@@ -491,26 +513,37 @@
         cursor: pointer;
     }
 
-    .copy-button-success {
-        background-color: #4CAF50;
-        color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
+    .notification {
         position: fixed;
         top: 20px;
         right: 20px;
+        padding: 12px 24px;
+        border-radius: 4px;
         z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+        max-width: 300px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
-    .copy-button-error {
+    .notification.success {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .notification.error {
         background-color: #f44336;
         color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
 
     .loading {

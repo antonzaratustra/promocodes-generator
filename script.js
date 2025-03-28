@@ -25,9 +25,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Обновление отображения промокода в реальном времени
     promoCodeInput.addEventListener('input', function(e) {
-        currentPromoCode = e.target.value.toUpperCase();
-        promoDisplay.textContent = currentPromoCode;
+        // Получаем введенное значение
+        let value = e.target.value;
+        
+        // Проверяем, содержит ли введенное значение недопустимые символы
+        if (/[^A-Za-z0-9]/.test(value)) {
+            // Если есть недопустимые символы, показываем уведомление
+            showNotification('Используйте только латинские буквы и цифры без пробелов и спецсимволов', 'error');
+            
+            // Удаляем все недопустимые символы
+            value = value.replace(/[^A-Za-z0-9]/g, '');
+        }
+        
+        // Преобразуем в верхний регистр
+        value = value.toUpperCase();
+        
+        // Обновляем значение в инпуте
+        e.target.value = value;
+        currentPromoCode = value;
+        promoDisplay.textContent = value;
     });
+
+    // Функция для проверки валидности промокода
+    function isValidPromoCode(code) {
+        // Проверяем на пустоту
+        if (!code.trim()) {
+            showError('Пожалуйста, введите промокод');
+            return false;
+        }
+        
+        // Проверяем на длину (минимум 4 символа)
+        if (code.length < 4) {
+            showError('Промокод должен содержать минимум 4 символа');
+            return false;
+        }
+        
+        // Проверяем, содержит ли недопустимые символы
+        if (/[^A-Za-z0-9]/.test(code)) {
+            showError('Используйте только латинские буквы и цифры без пробелов и спецсимволов');
+            return false;
+        }
+        
+        return true;
+    }
 
     // Функция для отправки данных в Firebase и Google Sheets
     async function createPromoCode(eventCode, year) {
@@ -58,8 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedEvent = eventSelect.value;
         const selectedYear = yearSelect.value;
         
-        if (!currentPromoCode.trim()) {
-            showError('Пожалуйста, введите промокод');
+        if (!isValidPromoCode(currentPromoCode)) {
             return;
         }
 
@@ -91,9 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const referralLink = document.getElementById('referralLink').innerText;
             
             navigator.clipboard.writeText(referralLink).then(() => {
-                alert('Ссылка скопирована в буфер обмена!');
+                showNotification('Ссылка скопирована в буфер обмена!', 'success');
             }).catch(err => {
                 console.error('Ошибка копирования:', err);
+                showNotification('Не удалось скопировать ссылку', 'error');
             });
         });
     }
@@ -109,13 +149,17 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    document.getElementById('copyButton').addEventListener('click', function() {
-        const referralLink = document.getElementById('referralLink').innerText;
+    // Функция показа уведомления
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
         
-        navigator.clipboard.writeText(referralLink).then(() => {
-            alert('Ссылка скопирована в буфер обмена!');
-        }).catch(err => {
-            console.error('Ошибка копирования:', err);
-        });
-    });
+        document.body.appendChild(notification);
+        
+        // Удаляем уведомление через 3 секунды
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
 });
