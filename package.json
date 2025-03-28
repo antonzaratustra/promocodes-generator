@@ -1,0 +1,20 @@
+{
+  "name": "promocodes",
+  "version": "1.0.0",
+  "description": "Promocodes system",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-urls.js",
+    "login": "npx clasp login",
+    "push": "node update-scripts.js push",
+    "deploy": "node update-scripts.js deploy",
+    "update-urls": "node update-scripts.js update-urls"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}

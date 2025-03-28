@@ -5,7 +5,7 @@ function initReferralPage(eventCode, year, promoCode) {
     document.getElementById('promoInfo').textContent = promoCode;
     
     // Загружаем данные
-    fetchReferralData(eventCode, year, promoCode);
+    fetchReferralData(eventCode, year, promoCode, false);
 }
 
 function getEventNameByCode(code) {
@@ -18,4 +18,4 @@ function getEventNameByCode(code) {
         'DSWEN': 'SalonWeek Dubai ENG'
     };
     return eventNames[code] || 'Неизвестное мероприятие';
-} 
+}

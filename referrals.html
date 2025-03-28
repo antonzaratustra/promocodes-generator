@@ -268,7 +268,7 @@
             document.getElementById('promoInfo').textContent = promoCode;
             
             // Загружаем данные
-            fetchReferralData(eventCode, year, promoCode);
+            fetchReferralData(eventCode, year, promoCode, isAdmin);
         }
 
         function getEventNameByCode(code) {
@@ -284,8 +284,12 @@
         }
 
         // Функция для получения данных рефералов
-        async function fetchReferralData(eventCode, year, promoCode) {
+        async function fetchReferralData(eventCode, year, promoCode, isAdmin) {
             try {
+                console.log('Fetching data for:', eventCode, year, promoCode, 'Admin mode:', isAdmin);
+                const dataUrl = getDataUrl(eventCode);
+                console.log('Using data URL:', dataUrl);
+                
                 // Устанавливаем текст загрузки в таблице
                 const loadingText = document.getElementById('loadingText');
                 loadingText.textContent = eventCode.endsWith('EN') ? 'Loading data...' : 'Загрузка данных';
@@ -702,6 +706,24 @@
                     return 'https://script.google.com/macros/s/AKfycbyFyDa80mQ4h6d0ilIWJdKhLLaTZ90ImMBBHKuaqzJbB_hS8gZYAWEBgof4O8TWk8_E/exec';
                 case 'DSWEN':
                     return 'https://script.google.com/macros/s/AKfycbxxS868ikkxqatEFWvoc7uv9VHNxMD49kLlalIz2PKnaPQy1Leb5dAUpV96LzLoK4lZ/exec';
+                default:
+                    throw new Error('Неизвестный тип мероприятия');
+            }
+        }
+        
+        // Функция для определения URL получения данных
+        function getDataUrl(eventCode) {
+            switch(eventCode) {
+                case 'MRWRU':
+                case 'DRWRU':
+                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                case 'DRWEN':
+                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                case 'MSWRU':
+                case 'DSWRU':
+                    return 'https://script.google.com/macros/s/AKfycbwe5iDg_rmBd7thFQyt49QY-pTOQ4w7HSHz1eJWHKcuAERBC3j_u8lY8QSpKJUo0K45Sw/exec';
+                case 'DSWEN':
+                    return 'https://script.google.com/macros/s/AKfycbyPiPe_a0iQdPYKeEFsBAMfGKbMqxRqJgOnevV8KL0pFBWlWLrTnbRG_VQ50t42DXNV/exec';
                 default:
                     throw new Error('Неизвестный тип мероприятия');
             }

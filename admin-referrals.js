@@ -54,7 +54,7 @@ async function handlePaymentStatusChange(event) {
         }, { merge: true });
 
         // Обновляем статистику
-        fetchReferralData(eventCode, year, promoCode);
+        fetchReferralData(eventCode, year, promoCode, true);
 
     } catch (error) {
         console.error('Ошибка при обновлении статуса:', error);

@@ -441,4 +441,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Получаем данные
     fetchReferralData(eventCode, year, promoCode, isAdmin);
-}); 
+});

@@ -1,0 +1,24 @@
+{
+  "sheets": [
+    {
+      "name": "MRWRU_DRWRU",
+      "scriptId": "1lhBis3pgD7aUFK7J0HLTo7drsp49IyDslQV6SnXNr3I5vpjObi1G6KeG",
+      "deploymentDescription": "RestaurantWeek Moscow and Dubai RU"
+    },
+    {
+      "name": "DRWEN",
+      "scriptId": "1Iqv1pisPMMtJD9obQvHvo4ASL_tC9dLN963ZRduSwCR1qblYvmr6lqex",
+      "deploymentDescription": "RestaurantWeek Dubai EN"
+    },
+    {
+      "name": "MSWRU_DSWRU",
+      "scriptId": "1PKRThL_NlQUvJYRQoVWXalxd4Wv6DPAb-E1e7_bdBjUNy6m5YtOwjOSu",
+      "deploymentDescription": "SalonWeek Moscow and Dubai RU"
+    },
+    {
+      "name": "DSWEN",
+      "scriptId": "1Sk3qb2T3bTa8shYlZq2vLFE3zzUTIKQQjzRXWcZPwtCKd1KHmiAQXtSm",
+      "deploymentDescription": "SalonWeek Dubai EN"
+    }
+  ]
+}
