@@ -134,6 +134,25 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async function() {
+        // Проверяем аутентификацию
+        if (!localStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'admin-login.html';
+            return;
+        }
+
+        // Проверяем время последнего входа
+        const loginTime = localStorage.getItem('adminLoginTime');
+        if (loginTime) {
+            const timeDiff = Date.now() - parseInt(loginTime);
+            // Если последний вход был более 30 минут назад, перенаправляем на страницу входа
+            if (timeDiff > 30 * 60 * 1000) {
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminLoginTime');
+                window.location.href = 'admin-login.html';
+                return;
+            }
+        }
+
         try {
             console.log('Проверка Firebase...');
             

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Вход</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: #2d2d2d;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .login-container h1 {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            color: #ffffff;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: #ffffff;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .login-button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .login-button:hover {
+            background-color: #45a049;
+        }
+        
+        .error-message {
+            color: #ff4444;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Админ-панель</h1>
+        <form id="loginForm" class="login-form">
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="login-button">Войти</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        // Проверяем аутентификацию
+        if (localStorage.getItem('adminLoggedIn')) {
+            window.location.href = 'admin.html';
+        }
+
+        const ADMIN_PASSWORD = 'E2JD*W8297'; // Замените на ваш пароль
+        const LOGIN_ATTEMPTS_LIMIT = 3;
+        let loginAttempts = 0;
+
+        // Функция для обработки входа
+        function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = ''; // Очищаем предыдущие ошибки
+
+            if (password === ADMIN_PASSWORD) {
+                // Сохраняем успешный вход в localStorage
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('adminLoginTime', Date.now());
+
+                // Перенаправляем на страницу администратора
+                window.location.href = 'admin.html';
+            } else {
+                loginAttempts++;
+                errorMessage.textContent = `Неверный пароль. Осталось попыток: ${LOGIN_ATTEMPTS_LIMIT - loginAttempts}`;
+                
+                if (loginAttempts >= LOGIN_ATTEMPTS_LIMIT) {
+                    errorMessage.textContent = 'Слишком много неудачных попыток. Попробуйте позже.';
+                    document.getElementById('loginForm').style.display = 'none';
+                }
+            }
+        }
+
+        // Дожидаемся загрузки DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+        });
+
+        // Проверяем время последнего входа
+        const loginTime = localStorage.getItem('adminLoginTime');
+        if (loginTime) {
+            const timeDiff = Date.now() - parseInt(loginTime);
+            // Если последний вход был более 30 минут назад, очищаем сессию
+            if (timeDiff > 30 * 60 * 1000) {
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminLoginTime');
+            }
+        }
+    </script>
+</body>
+</html>
