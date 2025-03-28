@@ -252,15 +252,17 @@
 
         promoCodes.forEach(promo => {
             const row = document.createElement('tr');
+            const promoCode = promo.promoCode; // Извлекаем promoCode из объекта
+
             row.innerHTML = `
-                <td>${promo.promoCode || '-'}</td>
+                <td>${promoCode || '-'}</td>
                 <td>${getEventNameByCode(promo.eventCode)}</td>
                 <td>${promo.year || '-'}</td>
                 <td>${formatDate(promo.createdAt)}</td>
                 <td>${promo.referralsCount || 0}</td>
                 <td>
                     <div class="action-buttons">
-                        <a href="referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promo.promoCode}" 
+                        <a href="referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promoCode}" 
                            class="view-btn">Просмотр</a>
                         <button class="delete-btn" data-id="${promo.id}">Удалить</button>
                     </div>
@@ -384,6 +386,35 @@
                 <button onclick="location.reload()">Попробовать снова</button>
             </div>
         `;
+    }
+
+    async function fetchReferralData() {
+        const promoCodeIndex = 0; // Установите правильный индекс
+
+        try {
+            const response = await fetch('https://script.google.com/macros/s/AKfycbwo5NyUB3E1dSTibFGryEzKvGP8IEvuyec-Is3sFhaDa89ywcSSTfH578FHgkXOCgHqmw/exec?mode=fetch&eventCode=MRWRU&year=2025&promoCode=4444444444DAWD');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Полученные данные:', data); // Логируем полученные данные
+
+            data.forEach(row => {
+                console.log('Данные строки:', row);
+                const promoCode = row[promoCodeIndex];
+
+                // Проверяем, является ли promoCode строкой
+                if (typeof promoCode === 'string') {
+                    console.log('Промокод:', promoCode.toUpperCase());
+                } else {
+                    console.error('promoCodeIndex не является строкой:', promoCode);
+                }
+            });
+        } catch (error) {
+            console.error('Ошибка при загрузке данных:', error);
+        }
     }
     </script>
 

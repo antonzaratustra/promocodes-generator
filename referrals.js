@@ -35,24 +35,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Функция для получения данных рефералов
     async function fetchReferralData(eventCode, year, promoCode) {
         try {
-            // Определяем URL для получения данных из Google Apps Script
             const dataUrl = getDataUrl(eventCode);
-            
-            // Показываем индикатор загрузки
             const tableBody = document.getElementById('referralsTableBody');
             tableBody.innerHTML = `<tr><td colspan="9" class="loading-cell">Загрузка данных...</td></tr>`;
             
-            // Выполняем запрос к Google Apps Script
-            const response = await fetch(`${dataUrl}?eventCode=${eventCode}&year=${year}&promoCode=${promoCode}&mode=fetch`, {
+            const response = await fetch(`${dataUrl}?eventCode=${eventCode}&year=${year}&promoCode=${promoCode}`, {
                 method: 'GET',
-                mode: 'no-cors' // Меняем cors на no-cors
+                mode: 'no-cors'
             });
             
             let data;
             
             try {
-                // Пытаемся получить данные из ответа
                 const jsonResponse = await response.json();
+                console.log('Ответ от API:', jsonResponse);
                 
                 if (jsonResponse.error) {
                     throw new Error(jsonResponse.error);
@@ -61,19 +57,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (jsonResponse.success && jsonResponse.data) {
                     data = jsonResponse.data;
                 } else {
-                    // Если нет данных, используем тестовые данные для демонстрации
                     console.warn('Данные не получены, используем тестовые данные');
                     data = getMockData(eventCode);
                 }
             } catch (parseError) {
                 console.error('Ошибка парсинга ответа:', parseError);
-                // Если возникла ошибка парсинга, также используем тестовые данные
                 data = getMockData(eventCode);
             }
             
-            // Заполняем таблицу и статистику
-            renderReferralsTable(data, eventCode);
-            updateStats(data, eventCode);
+            if (validateData(data)) {
+                renderReferralsTable(data, eventCode);
+                updateStats(data, eventCode);
+            } else {
+                console.warn('Некоторые данные не прошли валидацию');
+            }
             
         } catch (error) {
             console.error('Ошибка запроса:', error);
@@ -86,14 +83,14 @@ document.addEventListener('DOMContentLoaded', function() {
         switch(eventCode) {
             case 'MRWRU':
             case 'DRWRU':
-                return 'https://script.google.com/macros/s/AKfycbx2qgmCi9L_QcNcHjP_GwjtaqMu4zeJzUBJxJi7i4qkyRdOdC3qJMa1QkQUKpFtRzG7kQ/exec';
+                return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
             case 'DRWEN':
-                return 'https://script.google.com/macros/s/AKfycbyKGtcW495_P1RiDO0fwAnsq42Rrc1VKLmchR-O0hAHIuGbZgaQe_2B-qGCjknjIl0x0g/exec';
+                return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
             case 'MSWRU':
             case 'DSWRU':
-                return 'https://script.google.com/macros/s/AKfycbyIX4wd_fq4EhrnGgZWZkArmlvKv8ySff9kqtJxAxu7O28_aqxaVB5jC4nMNodoGWM3gA/exec';
+                return 'https://script.google.com/macros/s/AKfycbwe5iDg_rmBd7thFQyt49QY-pTOQ4w7HSHz1eJWHKcuAERBC3j_u8lY8QSpKJUo0K45Sw/exec';
             case 'DSWEN':
-                return 'https://script.google.com/macros/s/AKfycbwfp-XRx6KLZz3z8iXW2R6Qd3SXJwTQcbe8Bhzvn2iuGGExvX7YAXdqPHqamBpc3aRT/exec';
+                return 'https://script.google.com/macros/s/AKfycbyPiPe_a0iQdPYKeEFsBAMfGKbMqxRqJgOnevV8KL0pFBWlWLrTnbRG_VQ50t42DXNV/exec';
             default:
                 throw new Error('Неизвестный тип мероприятия');
         }
@@ -118,9 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Рассчитываем выплату как 5% от цены
             const commission = parseFloat(item.price) * 0.05;
             
+            // Обработка orderid
+            const orderId = item.orderid ? String(item.orderid).toUpperCase() : '-';
+            
             row.innerHTML = `
                 <td>${formatDate(item.sent)}</td>
-                <td>${item.orderid || '-'}</td>
+                <td>${orderId}</td>
                 <td>${item.products || '-'}</td>
                 <td>${item.name || '-'}</td>
                 <td>${item.price} ${currency}</td>
@@ -215,5 +215,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 isPaid: false
             }
         ];
+    }
+
+    function validateData(data) {
+        if (!Array.isArray(data)) {
+            console.error('Данные должны быть массивом');
+            return false;
+        }
+
+        for (const item of data) {
+            if (typeof item.orderid !== 'string') {
+                console.error('orderid должен быть строкой:', item.orderid);
+                return false;
+            }
+            if (isNaN(parseFloat(item.price))) {
+                console.error('price должен быть числом:', item.price);
+                return false;
+            }
+            if (typeof item.products !== 'string') {
+                console.error('products должен быть строкой:', item.products);
+                return false;
+            }
+            if (typeof item.name !== 'string') {
+                console.error('name должен быть строкой:', item.name);
+                return false;
+            }
+            if (typeof item.referer !== 'string') {
+                console.error('referer должен быть строкой:', item.referer);
+                return false;
+            }
+            if (typeof item.email !== 'string') {
+                console.error('email должен быть строкой:', item.email);
+                return false;
+            }
+            if (typeof item.isPaid !== 'boolean') {
+                console.error('isPaid должен быть булевым значением:', item.isPaid);
+                return false;
+            }
+        }
+
+        return true;
     }
 }); 
