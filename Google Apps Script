@@ -30,6 +30,20 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     console.log('Получены данные:', JSON.stringify(data));
     
+    if (e.parameter.action === 'updatePayment') {
+      if (!data.orderId || typeof data.isPaid !== 'boolean') {
+        throw new Error('Отсутствуют обязательные поля для обновления статуса оплаты');
+      }
+      
+      updatePaymentStatus(data.orderId, data.isPaid);
+      
+      output.setContent(JSON.stringify({
+        success: true,
+        message: 'Статус оплаты успешно обновлен'
+      }));
+      return output;
+    }
+    
     if (!data.promoCode || !data.eventCode || !data.year) {
       throw new Error('Отсутствуют обязательные поля');
     }
@@ -137,6 +151,41 @@ function getReferralData(promoCode) {
   return referrals;
 }
 
+/**
+ * Обновляет статус оплаты для заказа
+ */
+function updatePaymentStatus(orderId, isPaid) {
+  console.log('Updating payment status for orderId:', orderId);
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data-from-tilda');
+  if (!sheet) {
+    throw new Error('Лист data-from-tilda не найден');
+  }
+  
+  var dataRange = sheet.getDataRange();
+  var values = dataRange.getValues();
+  
+  // Получаем заголовки таблицы
+  var headers = values[0];
+  var orderIdIndex = headers.indexOf('orderid');
+  var isPaidIndex = headers.indexOf('isPaid');
+  
+  if (orderIdIndex === -1 || isPaidIndex === -1) {
+    throw new Error('Не найдены необходимые столбцы в таблице');
+  }
+  
+  // Ищем строку с нужным orderId
+  for (var i = 1; i < values.length; i++) {
+    if (values[i][orderIdIndex] === orderId) {
+      // Обновляем статус оплаты
+      sheet.getRange(i + 1, isPaidIndex + 1).setValue(isPaid);
+      return;
+    }
+  }
+  
+  throw new Error('Заказ с указанным ID не найден');
+}
+
 // Функция создания промокода
 function createPromoCode(promoCode, eventCode, year) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('promo-codes');
@@ -154,5 +203,3 @@ function createPromoCode(promoCode, eventCode, year) {
   
   console.log('Промокод создан:', promoCode, eventCode, year);
 }
-
-// Остальные функции (savePaymentStatuses и createPromoCode) остаются без изменений 

@@ -28,16 +28,16 @@
             </div>
             <div class="stats-box">
                 <div class="stat-item">
-                    <span class="stat-label">Выплачено:</span>
-                    <span id="paidAmount" class="stat-value">-</span>
+                    <span class="stat-label">Всего оплачено:</span>
+                    <span id="totalPaid" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">К оплате:</span>
-                    <span id="toPay" class="stat-value">-</span>
+                    <span class="stat-label">Всего к оплате:</span>
+                    <span id="totalPending" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Людей привлечено:</span>
-                    <span id="peopleReferred" class="stat-value">-</span>
+                    <span class="stat-label">Всего комиссия:</span>
+                    <span id="totalCommission" class="stat-value">-</span>
                 </div>
             </div>
         </div>
@@ -80,7 +80,10 @@
         const eventCode = urlParams.get('event');
         const year = urlParams.get('year');
         const promoCode = urlParams.get('promo');
-
+        const isAdmin = urlParams.get('admin') === 'true';
+        
+        console.log('Admin mode:', isAdmin);
+        
         if (!eventCode || !year || !promoCode) {
             document.body.innerHTML = `
                 <div class="error-page">
@@ -123,6 +126,8 @@
                 url.searchParams.append('year', year);
                 url.searchParams.append('promoCode', promoCode);
 
+                console.log('Fetching data from:', url.toString());
+
                 const response = await fetch(url.toString(), {
                     method: 'GET',
                     headers: {
@@ -130,22 +135,75 @@
                     }
                 });
 
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const data = await response.json();
+                const textData = await response.text();
+                console.log('Received text data:', textData);
                 
-                if (data.error) {
-                    throw new Error(data.error);
+                // Парсим JSON из строки
+                const parsedData = JSON.parse(JSON.parse(textData));
+                console.log('Parsed data:', JSON.stringify(parsedData, null, 2));
+                
+                if (parsedData.error) {
+                    throw new Error(parsedData.error);
                 }
 
-                if (data.data) {
-                    renderReferralsTable(data.data);
-                    updateStats(data.data);
+                // Проверяем, что данные существуют и это массив
+                const rawData = parsedData.data || [];
+                console.log('Raw data:', JSON.stringify(rawData, null, 2));
+                console.log('Raw data length:', rawData.length);
+                
+                // Обрабатываем данные перед отображением
+                const processedData = Array.isArray(rawData) ? rawData.map(async item => {
+                    console.log('Processing item:', JSON.stringify(item, null, 2));
+                    
+                    // Получаем статус оплаты из Firebase
+                    const paymentRef = db.collection('payments').doc(item.orderid);
+                    const paymentDoc = await paymentRef.get();
+                    const isPaid = paymentDoc.exists ? paymentDoc.data().isPaid : false;
+
+                    // Используем существующие поля из ответа
+                    return {
+                        name: item.name,
+                        phonework: item.phonework,
+                        email: item.email,
+                        orderid: item.orderid,
+                        paymentid: item.paymentid,
+                        products: item.products,
+                        price: item.price,
+                        promocode: item.promocode,
+                        discount: item.discount,
+                        subtotal: item.subtotal,
+                        Валюта: item.Валюта,
+                        Статус_оплаты: item.Статус_оплаты,
+                        referer: item.referer,
+                        formid: item.formid,
+                        Название_формы: item.Название_формы,
+                        sent: item.sent,
+                        requestid: item.requestid,
+                        isPaid: isPaid // Используем статус из Firebase
+                    };
+                }) : [];
+
+                // Ждем завершения всех асинхронных операций
+                const finalData = await Promise.all(processedData);
+                
+                console.log('Final processed data:', JSON.stringify(finalData, null, 2));
+                console.log('Final data length:', finalData.length);
+
+                // Проверяем, что данные не пустые
+                if (finalData.length > 0) {
+                    console.log('Rendering data with length:', finalData.length);
+                    renderReferralsTable(finalData, eventCode, isAdmin);
+                    updateStats(finalData, eventCode);
                 } else {
-                    renderReferralsTable([]);
-                    updateStats([]);
+                    console.log('No data received');
+                    renderReferralsTable([], eventCode, isAdmin);
+                    updateStats([], eventCode);
                 }
 
             } catch (error) {
@@ -154,11 +212,22 @@
             }
         }
 
-        function renderReferralsTable(data) {
+        // Функция для отображения таблицы рефералов
+        function renderReferralsTable(data, eventCode, isAdmin) {
+            console.log('Rendering referrals table with data:', JSON.stringify(data, null, 2));
+            console.log('Event code:', eventCode);
+            console.log('Is admin:', isAdmin);
+            
             const tableBody = document.getElementById('referralsTableBody');
+            if (!tableBody) {
+                console.error('Table body not found');
+                return;
+            }
+            
             tableBody.innerHTML = '';
 
-            if (!data || data.length === 0) {
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                console.log('No data to display');
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="9" class="no-data">
@@ -174,52 +243,147 @@
                 return;
             }
 
-            data.forEach(item => {
-                const commission = parseFloat(item.price) * 0.05; // 5% комиссия
+            const currency = eventCode.endsWith('EN') ? '$' : '₽';
+            console.log('Using currency:', currency);
+
+            data.forEach((item, index) => {
+                console.log(`Processing table item #${index}:`, JSON.stringify(item, null, 2));
+                const commission = parseFloat(item.price) * 0.05;
+                const orderId = item.orderid ? String(item.orderid).toUpperCase() : '-';
+                
                 const row = document.createElement('tr');
+                
+                // Определяем, какой контент отображать в столбце "Оплачено"
+                const paidContent = isAdmin
+                    ? `<input type="checkbox" class="paid-checkbox" data-orderid="${item.orderid}" ${item.isPaid ? 'checked' : ''}>`
+                    : (item.isPaid ? '✅' : '⏳');
+
+                console.log('Row data:', {
+                    date: formatDate(item.sent),
+                    orderId: orderId,
+                    products: item.products,
+                    name: item.name,
+                    price: item.price,
+                    referer: formatReferer(item.referer),
+                    email: item.email,
+                    commission: commission,
+                    paidContent: paidContent
+                });
+
                 row.innerHTML = `
                     <td>${formatDate(item.sent)}</td>
-                    <td>${item.orderid || '-'}</td>
+                    <td>${orderId}</td>
                     <td>${item.products || '-'}</td>
                     <td>${item.name || '-'}</td>
-                    <td>${item.price || '0'}</td>
-                    <td>${item.referer || '-'}</td>
+                    <td>${item.price} ${currency}</td>
+                    <td>${formatReferer(item.referer)}</td>
                     <td>${item.email || '-'}</td>
-                    <td>${commission.toFixed(2)}</td>
-                    <td>${item.isPaid ? '✅' : '⏳'}</td>
+                    <td>${commission.toFixed(2)} ${currency}</td>
+                    <td>${paidContent}</td>
                 `;
+                
                 tableBody.appendChild(row);
             });
+
+            // Добавляем обработчик для чекбоксов, если это админ
+            if (isAdmin) {
+                console.log('Adding checkbox handlers');
+                document.querySelectorAll('.paid-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const orderId = this.dataset.orderid;
+                        const isChecked = this.checked;
+                        console.log('Updating payment status for orderId:', orderId, 'to', isChecked);
+                        // Передаем данные в функцию updatePaymentStatus
+                        updatePaymentStatus(orderId, isChecked, data);
+                    });
+                });
+            }
         }
 
-        function updateStats(data) {
-            const paidAmount = data
+        function updateStats(data, eventCode) {
+            const totalPaid = data
                 .filter(item => item.isPaid)
-                .reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
+                .reduce((sum, item) => sum + parseFloat(item.price), 0);
 
-            const toPayAmount = data
+            const totalPending = data
                 .filter(item => !item.isPaid)
+                .reduce((sum, item) => sum + parseFloat(item.price), 0);
+
+            const totalCommission = data
                 .reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
 
-            document.getElementById('paidAmount').textContent = `${paidAmount.toFixed(2)} ₽`;
-            document.getElementById('toPay').textContent = `${toPayAmount.toFixed(2)} ₽`;
-            document.getElementById('peopleReferred').textContent = data.length;
+            const currency = eventCode.endsWith('EN') ? '$' : '₽';
+
+            document.getElementById('totalPaid').textContent = `${totalPaid.toFixed(2)} ${currency}`;
+            document.getElementById('totalPending').textContent = `${totalPending.toFixed(2)} ${currency}`;
+            document.getElementById('totalCommission').textContent = `${totalCommission.toFixed(2)} ${currency}`;
         }
 
         function formatDate(dateString) {
-            if (!dateString) return '-';
-            return new Date(dateString).toLocaleString('ru-RU');
+            return new Date(dateString).toLocaleString('ru-RU', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function formatReferer(url) {
+            try {
+                const parsedUrl = new URL(url);
+                return parsedUrl.hostname;
+            } catch {
+                return url || '-';
+            }
         }
 
         function showError(message) {
-            document.body.innerHTML = `
-                <div class="error-page">
-                    <h1>Ошибка</h1>
-                    <p>${message}</p>
-                    <a href="index.html" class="error-link">Вернуться на главную</a>
-                </div>
-            `;
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+        }
+
+        async function updatePaymentStatus(orderId, isPaid, data) {
+            try {
+                // Используем Firebase для обновления статуса оплаты
+                const paymentRef = db.collection('payments').doc(orderId);
+                
+                await paymentRef.set({
+                    orderId: orderId,
+                    isPaid: isPaid,
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                console.log('Payment status updated successfully');
+                
+                // Обновляем статистику
+                updateStats(data, eventCode);
+                
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса оплаты:', error);
+                showError('Ошибка при обновлении статуса оплаты');
+            }
+        }
+
+        function getWebhookUrl(eventCode) {
+            switch(eventCode) {
+                case 'MRWRU':
+                case 'DRWRU':
+                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                case 'DRWEN':
+                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                case 'MSWRU':
+                case 'DSWRU':
+                    return 'https://script.google.com/macros/s/AKfycbwe5iDg_rmBd7thFQyt49QY-pTOQ4w7HSHz1eJWHKcuAERBC3j_u8lY8QSpKJUo0K45Sw/exec';
+                case 'DSWEN':
+                    return 'https://script.google.com/macros/s/AKfycbyPiPe_a0iQdPYKeEFsBAMfGKbMqxRqJgOnevV8KL0pFBWlWLrTnbRG_VQ50t42DXNV/exec';
+                default:
+                    throw new Error('Неизвестный тип мероприятия');
+            }
         }
     </script>
 </body>
-</html> 
+</html>
