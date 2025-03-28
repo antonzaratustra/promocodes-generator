@@ -14,6 +14,15 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+.restaurant-btn{
+    color: #ffffff;
+}
+
+
+.salon-btn{
+    color: #ffffff;
+}
+
 .filter-group {
     display: flex;
     flex-direction: column;
