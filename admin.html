@@ -368,21 +368,9 @@
             btn.addEventListener('click', function() {
                 const url = this.dataset.url;
                 navigator.clipboard.writeText(url).then(() => {
-                    const copyButton = document.createElement('button');
-                    copyButton.className = 'copy-button-success';
-                    copyButton.textContent = '✓ Скопировано!';
-                    setTimeout(() => {
-                        copyButton.remove();
-                    }, 2000);
-                    document.body.appendChild(copyButton);
+                    showNotification('Клиентская ссылка скопирована в буфер обмена!', 'success');
                 }).catch(err => {
-                    const copyButton = document.createElement('button');
-                    copyButton.className = 'copy-button-error';
-                    copyButton.textContent = '⚠️ Ошибка копирования';
-                    setTimeout(() => {
-                        copyButton.remove();
-                    }, 2000);
-                    document.body.appendChild(copyButton);
+                    showNotification('Не удалось скопировать ссылку', 'error');
                 });
             });
         });
@@ -599,9 +587,9 @@
 
     .notification {
         position: fixed;
-        top: 20px;
+        bottom: 20px;
         right: 20px;
-        padding: 12px 24px;
+        padding: 15px 25px;
         border-radius: 4px;
         z-index: 1000;
         animation: slideIn 0.3s ease-out;
