@@ -246,8 +246,14 @@
                 console.log('Received text data:', textData);
                 
                 // Парсим JSON из строки
-                const parsedData = JSON.parse(JSON.parse(textData));
-                console.log('Parsed data:', JSON.stringify(parsedData, null, 2));
+                let parsedData;
+                try {
+                    parsedData = JSON.parse(textData);
+                    console.log('Parsed data:', JSON.stringify(parsedData, null, 2));
+                } catch (e) {
+                    console.error('Ошибка при парсинге JSON:', e);
+                    throw new Error('Ошибка при обработке данных сервера');
+                }
                 
                 // Проверяем наличие ошибки в ответе
                 if (parsedData.error) {
@@ -290,7 +296,8 @@
                     // Используем существующие поля из ответа
                     const baseData = {
                         name: item.name,
-                        phonework: item.phonework,
+                        // Обрабатываем оба варианта поля телефона
+                        phonework: item.phonework || item.workphone,
                         email: item.email,
                         orderid: item.orderid,
                         paymentid: item.paymentid,
@@ -613,9 +620,9 @@
             switch(eventCode) {
                 case 'MRWRU':
                 case 'DRWRU':
-                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                    return 'https://script.google.com/macros/s/AKfycbyQ5MtTihCrZvKprNlg2aovafN5MNB8Fm9D_TRB1ktC4QdU-XrqkFF5hCMwiJFZFfvubg/exec';
                 case 'DRWEN':
-                    return 'https://script.google.com/macros/s/AKfycbw1OX4UDGmlZzmE1TMj0ZY5-H1zHdoMzmUv7zUryczOGyhMONBzoCbhnNESaHjRBAY89A/exec';
+                    return 'https://script.google.com/macros/s/AKfycbx_dS3fs7pU3Z2_TayzjHGvw4srEsZC-zeZL_zdF-9GyFXcwjhGDuVAPiXGhKMDMqAsOg/exec';
                 case 'MSWRU':
                 case 'DSWRU':
                     return 'https://script.google.com/macros/s/AKfycbwe5iDg_rmBd7thFQyt49QY-pTOQ4w7HSHz1eJWHKcuAERBC3j_u8lY8QSpKJUo0K45Sw/exec';

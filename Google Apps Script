@@ -109,10 +109,19 @@ function getReferralData(promoCode) {
   
   // Получаем заголовки таблицы
   var headers = values[0];
-  var promoCodeIndex = headers.indexOf('promocode');
+  console.log('Заголовки таблицы:', headers); // Логируем заголовки
+  
+  // Ищем индекс столбца promocode (case-insensitive)
+  var promoCodeIndex = -1;
+  for (var i = 0; i < headers.length; i++) {
+    if (headers[i].toLowerCase() === 'promocode') {
+      promoCodeIndex = i;
+      break;
+    }
+  }
   
   if (promoCodeIndex === -1) {
-    throw new Error('Столбец "promocode" не найден');
+    throw new Error('Столбец "promocode" не найден. Доступные столбцы: ' + headers.join(', '));
   }
   
   // Данные для возврата
@@ -121,7 +130,12 @@ function getReferralData(promoCode) {
   // Проходим по всем строкам и ищем совпадения с промокодом
   for (var i = 1; i < values.length; i++) {
     var row = values[i];
-    if (row[promoCodeIndex] && row[promoCodeIndex].toUpperCase() === promoCode.toUpperCase()) {
+    
+    // Логируем значение в promoCodeIndex
+    console.log('Значение в promoCodeIndex:', row[promoCodeIndex]);
+    
+    // Проверяем, является ли значение строкой
+    if (typeof row[promoCodeIndex] === 'string' && row[promoCodeIndex].toUpperCase() === promoCode.toUpperCase()) {
       // Преобразуем строку в объект
       var referral = {};
       for (var j = 0; j < headers.length; j++) {
@@ -144,6 +158,8 @@ function getReferralData(promoCode) {
       }
       
       referrals.push(referral);
+    } else {
+      console.warn('Не удалось найти совпадение для промокода:', row[promoCodeIndex]);
     }
   }
   
