@@ -111,18 +111,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showSuccessWithLink(promoCode, eventCode, year) {
-        // Получаем текущий путь
-        const currentPath = window.location.pathname;
-        // Извлекаем имя репозитория из пути (всё после последнего слэша)
-        const repoPath = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-        const params = new URLSearchParams({ event: eventCode, year: year, promo: promoCode });
-        const referralPageUrl = `${repoPath}referrals.html?${params.toString()}`;
+        // Создаем относительный URL
+        const relativeUrl = `referrals.html?event=${eventCode}&year=${year}&promo=${promoCode}`;
+        
+        // Получаем полный URL сайта
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+        const fullUrl = baseUrl + relativeUrl;
         
         resultDiv.innerHTML = `
             <div class="success">
                 Промокод успешно создан!
                 <p>Ссылка для просмотра рефералов: 
-                    <span id="referralLink">${referralPageUrl}</span>
+                    <span id="referralLink">${fullUrl}</span>
                 </p>
                 <button id="copyButton" class="copy-button">Копировать ссылку</button>
             </div>
