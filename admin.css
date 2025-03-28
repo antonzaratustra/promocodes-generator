@@ -1,4 +1,15 @@
 /* Стили для админ-панели */
+
+
+* {
+    font-variant-numeric: lining-nums !important;
+    font-feature-settings: 'lnum' !important;
+    -moz-font-feature-settings: 'lnum=1';
+    -ms-font-feature-settings: 'lnum';
+    -webkit-font-feature-settings: 'lnum';
+    -o-font-feature-settings: 'lnum';
+    }
+
 .admin-header {
     margin-bottom: 30px;
 }
