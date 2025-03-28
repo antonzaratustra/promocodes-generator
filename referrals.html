@@ -28,15 +28,15 @@
             </div>
             <div class="stats-box">
                 <div class="stat-item">
-                    <span class="stat-label">Всего оплачено:</span>
+                    <span class="stat-label">Всего выплачено:</span>
                     <span id="totalPaid" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Всего к оплате:</span>
+                    <span class="stat-label">Всего к выплате:</span>
                     <span id="totalPending" class="stat-value">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Всего комиссия:</span>
+                    <span class="stat-label">Всего привлечено:</span>
                     <span id="totalCommission" class="stat-value">-</span>
                 </div>
             </div>
@@ -209,11 +209,11 @@
                 if (finalData.length > 0) {
                     console.log('Rendering data with length:', finalData.length);
                     renderReferralsTable(finalData, eventCode, isAdmin);
-                    updateStats(finalData, eventCode);
+                    updateStats(eventCode);
                 } else {
                     console.log('No data received');
                     renderReferralsTable([], eventCode, isAdmin);
-                    updateStats([], eventCode);
+                    updateStats(eventCode);
                 }
 
             } catch (error) {
@@ -310,23 +310,89 @@
             }
         }
 
-        function updateStats(data, eventCode) {
+        function getDataFromTable() {
+            const tableBody = document.getElementById('referralsTableBody');
+            if (!tableBody) return [];
+
+            const data = [];
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let row of rows) {
+                // Проверяем, есть ли чекбокс (админ режим)
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                const isPaid = checkbox ? checkbox.checked : row.cells[row.cells.length - 1].textContent === '✅';
+                const price = parseFloat(row.cells[4].textContent.replace(/[^\d.]/g, ''));
+                
+                data.push({
+                    price: price,
+                    isPaid: isPaid
+                });
+            }
+            
+            return data;
+        }
+
+        function updateStats(eventCode) {
+            const currency = eventCode.endsWith('EN') ? '$' : '₽';
+            const data = getDataFromTable();
+
+            // Считаем выплаты по оплаченным заказам
             const totalPaid = data
                 .filter(item => item.isPaid)
-                .reduce((sum, item) => sum + parseFloat(item.price), 0);
+                .reduce((sum, item) => sum + item.price * 0.05, 0);
 
+            // Считаем выплаты по неоплаченным заказам
             const totalPending = data
                 .filter(item => !item.isPaid)
-                .reduce((sum, item) => sum + parseFloat(item.price), 0);
+                .reduce((sum, item) => sum + item.price * 0.05, 0);
 
-            const totalCommission = data
-                .reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
-
-            const currency = eventCode.endsWith('EN') ? '$' : '₽';
+            // Считаем количество привлеченных людей
+            const totalPeople = data.length;
 
             document.getElementById('totalPaid').textContent = `${totalPaid.toFixed(2)} ${currency}`;
             document.getElementById('totalPending').textContent = `${totalPending.toFixed(2)} ${currency}`;
-            document.getElementById('totalCommission').textContent = `${totalCommission.toFixed(2)} ${currency}`;
+            document.getElementById('totalCommission').textContent = `${totalPeople} человек`;
+        }
+
+        async function updatePaymentStatus(orderId, isPaid, data) {
+            try {
+                // Используем Firebase для обновления статуса оплаты
+                const paymentRef = db.collection('payments').doc(orderId);
+                
+                await paymentRef.set({
+                    orderId: orderId,
+                    isPaid: isPaid,
+                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                console.log('Payment status updated successfully');
+                
+                // Обновляем только текущую строку
+                const tableBody = document.getElementById('referralsTableBody');
+                if (tableBody) {
+                    const row = Array.from(tableBody.getElementsByTagName('tr'))
+                        .find(row => row.querySelector(`input[data-orderid="${orderId}"]`));
+                    
+                    if (row) {
+                        const checkbox = row.querySelector('input[type="checkbox"]');
+                        checkbox.checked = isPaid;
+                        
+                        // Обновляем комиссию только для этой строки
+                        const price = parseFloat(row.cells[4].textContent.replace(/[^\d.]/g, ''));
+                        const commission = price * 0.05;
+                        const commissionCell = row.cells[row.cells.length - 2];
+                        const currency = commissionCell.textContent.split(' ')[1];
+                        commissionCell.textContent = `${commission.toFixed(2)} ${currency}`;
+                    }
+                }
+                
+                // Обновляем статистику
+                updateStats(eventCode);
+                
+            } catch (error) {
+                console.error('Ошибка при обновлении статуса оплаты:', error);
+                showError('Ошибка при обновлении статуса оплаты');
+            }
         }
 
         function formatDate(dateString) {
@@ -354,28 +420,6 @@
             errorDiv.className = 'error-message';
             errorDiv.textContent = message;
             document.body.appendChild(errorDiv);
-        }
-
-        async function updatePaymentStatus(orderId, isPaid, data) {
-            try {
-                // Используем Firebase для обновления статуса оплаты
-                const paymentRef = db.collection('payments').doc(orderId);
-                
-                await paymentRef.set({
-                    orderId: orderId,
-                    isPaid: isPaid,
-                    updated_at: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-                console.log('Payment status updated successfully');
-                
-                // Обновляем статистику
-                updateStats(data, eventCode);
-                
-            } catch (error) {
-                console.error('Ошибка при обновлении статуса оплаты:', error);
-                showError('Ошибка при обновлении статуса оплаты');
-            }
         }
 
         function getWebhookUrl(eventCode) {
