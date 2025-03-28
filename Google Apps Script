@@ -1,113 +1,81 @@
-// Настройка CORS для Apps Script
-function doGet(e) {
-  var mode = e.parameter.mode || '';
-  var callback = e.parameter.callback || '';
-  
-  // Подготавливаем данные для ответа
-  var responseData = {};
-  
-  if (mode === 'fetch') {
-    var eventCode = e.parameter.eventCode;
-    var year = e.parameter.year;
-    var promoCode = e.parameter.promoCode;
-    
-    if (!eventCode || !year || !promoCode) {
-      responseData = {
-        error: 'Отсутствуют необходимые параметры',
-        params: { eventCode, year, promoCode }
-      };
-    } else {
-      try {
-        var data = getReferralData(promoCode);
-        responseData = {
-          success: true,
-          data: data,
-          timestamp: new Date().toISOString()
-        };
-      } catch (err) {
-        responseData = {
-          error: err.toString(),
-          stack: err.stack
-        };
-      }
-    }
-  } else {
-    responseData = {
-      message: "Используйте параметр mode=fetch для получения данных",
-      supportedModes: ['fetch'],
-      timestamp: new Date().toISOString()
-    };
-  }
-
-  // Оборачиваем ответ в JSONP callback если он указан
-  var response = callback ? 
-    callback + "(" + JSON.stringify(responseData) + ")" : 
-    JSON.stringify(responseData);
-
-  return ContentService.createTextOutput(response)
-    .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+// Общая функция для установки CORS заголовков
+function createCorsResponse(content) {
+  return ContentService.createTextOutput()
+      .setMimeType(ContentService.MimeType.JSON)
+      .setContent(JSON.stringify({
+        ...content,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type"
+        }
+      }));
 }
 
-// Настройка CORS для POST-запросов
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var mode = data.mode || '';
-    
-    if (mode === 'save') {
-      savePaymentStatuses(data.referrals);
-      return ContentService.createTextOutput(JSON.stringify({
-        success: true,
-        message: 'Данные успешно сохранены',
-        timestamp: new Date().toISOString()
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-    } 
-    
-    if (mode === 'create') {
-      createPromoCode(data.promoCode, data.eventCode, data.year);
-      return ContentService.createTextOutput(JSON.stringify({
-        success: true,
-        message: 'Промокод успешно создан',
-        timestamp: new Date().toISOString()
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      error: 'Неизвестный режим запроса',
-      supportedModes: ['save', 'create']
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      error: err.toString(),
-      stack: err.stack
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// Добавляем обработку OPTIONS для предварительных запросов CORS
+// Обработка OPTIONS запросов
 function doOptions(e) {
   var output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
+  output.setContent(JSON.stringify({ status: "ok" }));
   
-  // Настраиваем заголовки CORS для OPTIONS
-  var headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Requested-With',
-    'Access-Control-Max-Age': '3600',
-    'Access-Control-Allow-Credentials': 'true'
-  };
+  return output;
+}
+
+// Обработка POST запросов
+function doPost(e) {
+  var output = ContentService.createTextOutput();
+  output.setMimeType(ContentService.MimeType.JSON);
   
-  // Устанавливаем заголовки
-  for (var key in headers) {
-    output.addHeader(key, headers[key]);
+  try {
+    var data = JSON.parse(e.postData.contents);
+    console.log('Получены данные:', JSON.stringify(data));
+    
+    if (!data.promoCode || !data.eventCode || !data.year) {
+      throw new Error('Отсутствуют обязательные поля');
+    }
+    
+    createPromoCode(data.promoCode, data.eventCode, data.year);
+    
+    output.setContent(JSON.stringify({
+      success: true,
+      message: 'Промокод успешно создан'
+    }));
+    
+  } catch (err) {
+    console.error('Ошибка:', err.toString());
+    output.setContent(JSON.stringify({
+      success: false,
+      error: err.toString()
+    }));
   }
   
+  return output;
+}
+
+// Обработка GET запросов
+function doGet(e) {
+  var output = ContentService.createTextOutput();
   output.setMimeType(ContentService.MimeType.JSON);
+  
+  try {
+    var promoCode = e.parameter.promoCode;
+    if (!promoCode) {
+      throw new Error('Не указан промокод');
+    }
+    
+    var data = getReferralData(promoCode);
+    output.setContent(JSON.stringify({
+      success: true,
+      data: data
+    }));
+    
+  } catch (err) {
+    output.setContent(JSON.stringify({
+      success: false,
+      error: err.toString()
+    }));
+  }
+  
   return output;
 }
 
@@ -167,6 +135,24 @@ function getReferralData(promoCode) {
   
   console.log('Found referrals:', referrals.length);
   return referrals;
+}
+
+// Функция создания промокода
+function createPromoCode(promoCode, eventCode, year) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('promo-codes');
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('promo-codes');
+    sheet.appendRow(['promoCode', 'eventCode', 'year', 'createdAt']);
+  }
+  
+  sheet.appendRow([
+    promoCode,
+    eventCode,
+    year,
+    new Date().toISOString()
+  ]);
+  
+  console.log('Промокод создан:', promoCode, eventCode, year);
 }
 
 // Остальные функции (savePaymentStatuses и createPromoCode) остаются без изменений 

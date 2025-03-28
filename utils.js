@@ -4,17 +4,17 @@ function getWebhookUrl(eventCode) {
         case 'MRWRU':
         case 'DRWRU':
             // Первый URL для MRW и DRW RU
-            return 'https://script.google.com/macros/s/AKfycbyZEaxmorO6rogNkex6UOU02B1jiE4HwW-Fe4AXk4AfMphsAef1rMBZaiQtfxWsPqvD0w/exec';
+            return 'https://script.google.com/macros/s/AKfycbwo5NyUB3E1dSTibFGryEzKvGP8IEvuyec-Is3sFhaDa89ywcSSTfH578FHgkXOCgHqmw/exec';
         case 'DRWEN':
             // Второй URL для DRW ENG
-            return 'https://script.google.com/macros/s/AKfycbxRIV9zCMb2TbxBsyRd9p-MhwtJp9B1yO13vFljD6nUs_Pd-nHn-yT4YNPY3tTLr9M4TQ/exec';
+            return 'https://script.google.com/macros/s/AKfycbwqLeCFbXMQugu9kYkHZ6V4tocRwbYXslxPmBTsk92RPDmwOARuw5yqDFfuXEDCd3A6Zg/exec';
         case 'MSWRU':
         case 'DSWRU':
             // Третий URL для MSW и DSW RU
-            return 'https://script.google.com/macros/s/AKfycbyCSHa74BQKmq2iN4ysFHze6jAv1xYHseJ4GQ9GukKEmsPFpyrha9pOQyRm6mmtz2VOiw/exec';
+            return 'https://script.google.com/macros/s/AKfycbwZ5WluEsSiggWvsOqSpo_i3uiK_MU3waIjEyxvdMFsEDyvoMdkYzO9aASvyzNH1WXlqA/exec';
         case 'DSWEN':
             // Четвертый URL для DSW ENG
-            return 'https://script.google.com/macros/s/AKfycbydkn57pXHqoP1dO_4TzjQVQ_Z04gtkVUjJeye33-BkvsK9SSzy0pVLpnuKyFu5LgHn/exec';
+            return 'https://script.google.com/macros/s/AKfycbzdLvKLrauiUkGlUlJiXSFRLYsKNuucXwG6J2p2AjLahHYVxvGT2PB31dC9OQ5w7ZA9/exec';
         default:
             throw new Error('Неизвестный тип мероприятия');
     }

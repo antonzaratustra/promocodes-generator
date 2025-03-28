@@ -30,76 +30,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Функция для отправки данных в Firebase и Google Sheets
-    async function createPromoCode(eventCode, year, promoCode) {
+    async function createPromoCode(eventCode, year) {
         try {
-            // Показываем спиннер
-            showLoading();
-            
-            // Проверяем инициализацию Firebase
-            if (typeof firebase === 'undefined') {
-                throw new Error('Firebase не инициализирован');
-            }
+            console.log('Создаем промокод:', { eventCode, year, promoCode: currentPromoCode });
 
-            // Проверяем доступ к коллекции
-            if (typeof promoCodesCollection === 'undefined') {
-                throw new Error('Коллекция промокодов не доступна');
-            }
+            // Сохраняем в Firebase
+            const docRef = await promoCodesCollection.add({
+                promoCode: currentPromoCode,
+                eventCode: eventCode,
+                year: year,
+                createdAt: new Date().toISOString()
+            });
 
-            try {
-                // Создаем запись в Firebase
-                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-                await promoCodesCollection.add({
-                    promoCode: promoCode,
-                    eventCode: eventCode,
-                    year: year.toString(),
-                    createdAt: timestamp,
-                    referralsCount: 0
-                });
-                console.log('Промокод сохранен в Firebase:', { promoCode, eventCode, year });
-            } catch (firebaseError) {
-                console.error('Ошибка Firebase:', firebaseError);
-                throw firebaseError;
-            }
-
-            try {
-                // Отправляем данные в Google Apps Script
-                const webhookUrl = getWebhookUrl(eventCode);
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    mode: 'cors', // Добавляем режим CORS
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        mode: 'create',
-                        event: eventCode,
-                        promoCode: promoCode,
-                        year: year
-                    })
-                });
-
-                // Проверяем ответ
-                if (!response.ok) {
-                    console.warn('Предупреждение: Не удалось отправить данные в Google Sheets');
-                }
-            } catch (fetchError) {
-                console.warn('Предупреждение: Ошибка отправки в Google Apps Script:', fetchError);
-                // Продолжаем выполнение, так как промокод уже создан в Firebase
-            }
+            console.log('Промокод успешно сохранен в Firebase с ID:', docRef.id);
             
-            // Генерируем ссылку на страницу рефералов
-            const referralUrl = `/${eventCode}/${year}/${promoCode}`;
+            // Показываем успешное создание
+            showSuccessWithLink(currentPromoCode, eventCode, year);
             
-            // Показываем успешный результат с ссылкой
-            showSuccessWithLink(referralUrl);
-            
-            // Очищаем поле ввода
-            promoCodeInput.value = '';
-            promoDisplay.textContent = '';
         } catch (error) {
-            console.error('Ошибка при создании промокода:', error);
-            showError(error.message);
+            console.error('Ошибка создания промокода:', error);
+            alert('Произошла ошибка при создании промокода. Попробуйте еще раз.');
         }
     }
 
@@ -113,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        createPromoCode(selectedEvent, selectedYear, currentPromoCode);
+        createPromoCode(selectedEvent, selectedYear);
     });
 
     // Функции для отображения состояния
@@ -121,10 +71,9 @@ document.addEventListener('DOMContentLoaded', function() {
         resultDiv.innerHTML = '<div class="loading">Создание промокода...</div>';
     }
 
-    function showSuccessWithLink(referralUrl) {
+    function showSuccessWithLink(promoCode, eventCode, year) {
         const baseUrl = window.location.origin;
         // Создаем URL для страницы рефералов с параметрами
-        const [_, eventCode, year, promoCode] = referralUrl.split('/');
         const params = new URLSearchParams({ event: eventCode, year: year, promo: promoCode });
         const referralPageUrl = `referrals.html?${params.toString()}`;
         
@@ -133,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 Промокод успешно создан!
                 <p>Таблица добавлена в Google Drive.</p>
                 <p>Ссылка для просмотра рефералов: 
-                    <a href="${referralPageUrl}">${baseUrl}${referralUrl}</a>
+                    <a href="${referralPageUrl}">${baseUrl}/referrals.html?${params.toString()}</a>
                 </p>
             </div>
         `;
@@ -141,7 +90,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showError(message) {
         resultDiv.innerHTML = `
-            <div class="error">${message}</div>
+            <div class="error">
+                <p>${message}</p>
+                ${message.includes('Google Sheets') ? 
+                    '<p>Промокод сохранен в системе и будет доступен в админ-панели.</p>' : 
+                    ''}
+            </div>
         `;
     }
 });

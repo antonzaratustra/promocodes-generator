@@ -1,12 +1,11 @@
 // Конфигурация Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDBuaaDvbyVBV0No_7vG7doaIIBl8ELNME",
-  authDomain: "e2referrals.firebaseapp.com",
+  apiKey: "ваш-api-key",
+  authDomain: "ваш-auth-domain",
   projectId: "e2referrals",
-  storageBucket: "e2referrals.firebasestorage.app",
-  messagingSenderId: "563306851925",
-  appId: "1:563306851925:web:f693d09be9dad2f6b06edc",
-  measurementId: "G-8J5F5JF6GP"
+  storageBucket: "ваш-storage-bucket",
+  messagingSenderId: "ваш-messaging-sender-id",
+  appId: "ваш-app-id"
 };
 
 // Инициализация Firebase
@@ -22,7 +21,7 @@ try {
 const db = firebase.firestore();
 
 // Экспортируем коллекцию промокодов
-const promoCodesCollection = db.collection('promoCodes');
+const promoCodesCollection = db.collection('promo-codes');
 
 // Проверяем доступ к Firestore
 promoCodesCollection.limit(1).get()

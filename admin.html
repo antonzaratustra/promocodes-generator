@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin.css">
-    <script src="admin.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="utils.js"></script>
 </head>
 <body>
@@ -36,6 +38,12 @@
                 </div>
                 <button id="applyFilters" class="filter-btn">Применить фильтры</button>
             </div>
+            <button onclick="testCreatePromoCode()" style="margin-left: 10px;">
+                Создать тестовый промокод
+            </button>
+            <button onclick="checkExistingPromoCodes()" style="margin-left: 10px;">
+                Проверить существующие промокоды
+            </button>
         </header>
 
         <main>
@@ -130,9 +138,346 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="admin.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            console.log('Проверка Firebase...');
+            
+            // Проверяем, что у нас есть доступ к promoCodesCollection
+            if (!promoCodesCollection) {
+                throw new Error('Коллекция промокодов недоступна');
+            }
+            
+            console.log('promoCodesCollection path:', promoCodesCollection.path);
+
+            // Показываем состояние загрузки
+            const tableBody = document.getElementById('promoCodesTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="loading">
+                        <div class="loading-spinner"></div>
+                        Загрузка данных...
+                    </td>
+                </tr>
+            `;
+
+            // Заполняем выпадающий список с годами
+            populateYearSelect();
+            
+            // Пробуем загрузить данные
+            console.log('Начинаем загрузку промокодов...');
+            
+            // Добавляем проверку на существование документов
+            const testQuery = await promoCodesCollection.limit(1).get();
+            console.log('Тестовый запрос вернул пустой результат?', testQuery.empty);
+
+            const snapshot = await promoCodesCollection
+                .orderBy('createdAt', 'desc')
+                .get();
+
+            console.log('Получены данные:', snapshot.size, 'документов');
+            
+            const promoCodes = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                console.log('Документ:', {
+                    id: doc.id,
+                    promoCode: data.promoCode,
+                    eventCode: data.eventCode,
+                    year: data.year,
+                    createdAt: data.createdAt
+                });
+                promoCodes.push({
+                    id: doc.id,
+                    ...data
+                });
+            });
+
+            console.log('Отображаем', promoCodes.length, 'промокодов');
+            renderPromoCodes(promoCodes);
+
+        } catch (error) {
+            console.error('Ошибка при загрузке данных:', error);
+            showError(`Ошибка загрузки данных: ${error.message}`);
+        }
+    });
+
+    function populateYearSelect() {
+        const yearSelect = document.getElementById('yearFilter');
+        const currentYear = new Date().getFullYear();
+        
+        yearSelect.innerHTML = '<option value="all">Все годы</option>';
+        
+        // Добавляем года от текущего до текущего + 2
+        for (let year = currentYear; year <= currentYear + 2; year++) {
+            const option = document.createElement('option');
+            option.value = year.toString(); // Преобразуем в строку для соответствия формату в Firebase
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    async function loadPromoCodes() {
+        try {
+            console.log('Загрузка промокодов...');
+            const snapshot = await promoCodesCollection
+                .orderBy('createdAt', 'desc')
+                .get();
+
+            console.log('Получены данные из Firebase:', snapshot.size, 'документов');
+            
+            const promoCodes = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                console.log('Документ:', data);
+                promoCodes.push({
+                    id: doc.id,
+                    ...data
+                });
+            });
+
+            renderPromoCodes(promoCodes);
+        } catch (error) {
+            console.error('Ошибка загрузки промокодов:', error);
+            showError('Ошибка загрузки данных: ' + error.message);
+        }
+    }
+
+    function renderPromoCodes(promoCodes) {
+        const tableBody = document.getElementById('promoCodesTableBody');
+        tableBody.innerHTML = '';
+
+        if (promoCodes.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="no-data">Промокоды не найдены</td>
+                </tr>
+            `;
+            return;
+        }
+
+        promoCodes.forEach(promo => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${promo.promoCode || '-'}</td>
+                <td>${getEventNameByCode(promo.eventCode)}</td>
+                <td>${promo.year || '-'}</td>
+                <td>${formatDate(promo.createdAt)}</td>
+                <td>${promo.referralsCount || 0}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promo.promoCode}" 
+                           class="view-btn">Просмотр</a>
+                        <button class="delete-btn" data-id="${promo.id}">Удалить</button>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Добавляем обработчики для кнопок удаления
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                if (confirm('Вы уверены, что хотите удалить этот промокод?')) {
+                    const id = this.dataset.id;
+                    try {
+                        await firebase.firestore()
+                            .collection('promo-codes')
+                            .doc(id)
+                            .delete();
+                        loadPromoCodes(); // Перезагружаем список
+                    } catch (error) {
+                        console.error('Ошибка удаления:', error);
+                        alert('Ошибка удаления промокода');
+                    }
+                }
+            });
+        });
+    }
+
+    // Обработчик фильтров
+    document.getElementById('applyFilters').addEventListener('click', async function() {
+        const eventFilter = document.getElementById('eventFilter').value;
+        const yearFilter = document.getElementById('yearFilter').value;
+        
+        console.log('Применяем фильтры:', { eventFilter, yearFilter });
+        
+        try {
+            // Показываем состояние загрузки
+            const tableBody = document.getElementById('promoCodesTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="loading">
+                        <div class="loading-spinner"></div>
+                        Применение фильтров...
+                    </td>
+                </tr>
+            `;
+
+            let query = promoCodesCollection;
+            
+            // Строим запрос в зависимости от выбранных фильтров
+            if (eventFilter !== 'all' && yearFilter !== 'all') {
+                console.log('Применяем оба фильтра:', { eventFilter, yearFilter });
+                query = query
+                    .where('eventCode', '==', eventFilter)
+                    .where('year', '==', yearFilter)
+                    .orderBy('createdAt', 'desc');
+            } else if (eventFilter !== 'all') {
+                console.log('Применяем только фильтр мероприятия:', eventFilter);
+                query = query
+                    .where('eventCode', '==', eventFilter)
+                    .orderBy('createdAt', 'desc');
+            } else if (yearFilter !== 'all') {
+                console.log('Применяем только фильтр года:', yearFilter);
+                query = query
+                    .where('year', '==', yearFilter)
+                    .orderBy('createdAt', 'desc');
+            } else {
+                console.log('Загружаем все промокоды без фильтров');
+                query = query.orderBy('createdAt', 'desc');
+            }
+            
+            const snapshot = await query.get();
+            console.log('Запрос вернул', snapshot.size, 'документов');
+            
+            const promoCodes = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                console.log('Найден документ:', {
+                    id: doc.id,
+                    promoCode: data.promoCode,
+                    eventCode: data.eventCode,
+                    year: data.year,
+                    createdAt: data.createdAt
+                });
+                promoCodes.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            
+            console.log('Отображаем', promoCodes.length, 'промокодов');
+            renderPromoCodes(promoCodes);
+        } catch (error) {
+            console.error('Ошибка применения фильтров:', error);
+            if (error.message.includes('requires an index')) {
+                const indexUrl = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)[0];
+                showError(`
+                    Требуется создать индекс в Firebase. 
+                    <a href="${indexUrl}" target="_blank">Создать индекс</a>
+                    <br><br>
+                    После создания индекса подождите несколько минут и попробуйте снова.
+                `);
+            } else {
+                showError('Ошибка загрузки данных: ' + error.message);
+            }
+        }
+    });
+
+    function formatDate(timestamp) {
+        if (!timestamp) return '-';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleString('ru-RU');
+    }
+
+    function showError(message) {
+        const container = document.querySelector('.container');
+        container.innerHTML = `
+            <div class="error-message">
+                <h2>Ошибка</h2>
+                <p>${message}</p>
+                <button onclick="location.reload()">Попробовать снова</button>
+            </div>
+        `;
+    }
+
+    async function testCreatePromoCode() {
+        try {
+            const testData = {
+                promoCode: 'TEST' + Date.now(),
+                eventCode: 'MRWRU',
+                year: '2025',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                referralsCount: 0
+            };
+
+            console.log('Пробуем создать тестовый промокод:', testData);
+            
+            const docRef = await promoCodesCollection.add(testData);
+            console.log('Тестовый промокод создан с ID:', docRef.id);
+            
+            // Перезагружаем список
+            await loadPromoCodes();
+            
+            return docRef.id;
+        } catch (error) {
+            console.error('Ошибка создания тестового промокода:', error);
+            throw error;
+        }
+    }
+
+    async function checkExistingPromoCodes() {
+        try {
+            console.log('Проверяем все документы в коллекции...');
+            
+            const snapshot = await firebase.firestore()
+                .collection('promo-codes')
+                .get();
+            
+            console.log('Всего документов в коллекции:', snapshot.size);
+            
+            snapshot.forEach(doc => {
+                console.log('Документ ID:', doc.id);
+                console.log('Данные документа:', doc.data());
+                
+                // Проверяем наличие всех необходимых полей
+                const data = doc.data();
+                const missingFields = [];
+                ['promoCode', 'eventCode', 'year', 'createdAt', 'referralsCount'].forEach(field => {
+                    if (!(field in data)) {
+                        missingFields.push(field);
+                    }
+                });
+                
+                if (missingFields.length > 0) {
+                    console.warn('Документ', doc.id, 'не содержит поля:', missingFields);
+                }
+            });
+            
+        } catch (error) {
+            console.error('Ошибка при проверке документов:', error);
+            alert('Ошибка при проверке: ' + error.message);
+        }
+    }
+    </script>
+
+    <style>
+    .loading {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .error-message a {
+        color: #3498db;
+        text-decoration: underline;
+    }
+    </style>
 </body>
 </html> 
