@@ -161,13 +161,8 @@
                 const processedData = Array.isArray(rawData) ? rawData.map(async item => {
                     console.log('Processing item:', JSON.stringify(item, null, 2));
                     
-                    // Получаем статус оплаты из Firebase
-                    const paymentRef = db.collection('payments').doc(item.orderid);
-                    const paymentDoc = await paymentRef.get();
-                    const isPaid = paymentDoc.exists ? paymentDoc.data().isPaid : false;
-
                     // Используем существующие поля из ответа
-                    return {
+                    const baseData = {
                         name: item.name,
                         phonework: item.phonework,
                         email: item.email,
@@ -185,8 +180,23 @@
                         Название_формы: item.Название_формы,
                         sent: item.sent,
                         requestid: item.requestid,
-                        isPaid: isPaid // Используем статус из Firebase
+                        isPaid: false // По умолчанию false
                     };
+
+                    // Если есть orderid, загружаем статус оплаты из Firebase
+                    if (item.orderid) {
+                        try {
+                            const paymentRef = db.collection('payments').doc(item.orderid);
+                            const paymentDoc = await paymentRef.get();
+                            if (paymentDoc.exists) {
+                                baseData.isPaid = paymentDoc.data().isPaid;
+                            }
+                        } catch (error) {
+                            console.error('Ошибка при загрузке статуса оплаты:', error);
+                        }
+                    }
+
+                    return baseData;
                 }) : [];
 
                 // Ждем завершения всех асинхронных операций
