@@ -4,6 +4,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const createButton = document.getElementById('createButton');
     const resultDiv = document.getElementById('result');
     const eventSelect = document.getElementById('eventSelect');
+    const yearSelect = document.getElementById('yearSelect');
+
+    // Инициализация выбора года
+    initYearSelect();
+
+    // Функция для заполнения select с годами
+    function initYearSelect() {
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear; year <= currentYear + 2; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        }
+    }
 
     // Хранение промокода в верхнем регистре
     let currentPromoCode = '';
@@ -14,50 +29,76 @@ document.addEventListener('DOMContentLoaded', function() {
         promoDisplay.textContent = currentPromoCode;
     });
 
-    // Функция для отправки вебхука без ожидания ответа
-    async function sendWebhook(eventType) {
+    // Функция для отправки данных в Firebase и Google Sheets
+    async function createPromoCode(eventCode, year, promoCode) {
         try {
             // Показываем спиннер
             showLoading();
             
-            // Выбираем правильный URL вебхука в зависимости от мероприятия
-            let webhookUrl = '';
-            switch(eventType) {
-                case 'event1': // RestaurantWeek Moscow
-                case 'event2': // RestaurantWeek Dubai RU
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbwzUnZNxkO70ArNKDAcGo2JJw0ziRh31MJcr07EyRBSA-SFgpGdFk91KMvd-JykaVcECw/exec';
-                    break;
-                case 'event3': // RestaurantWeek Dubai ENG
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzb78Q3FMc-lbzHWE90xQJXN20StEaPpMBA0INW0Sm8-XBsmdiUagsIc-MNMP34vKhDLw/exec';
-                    break;
-                case 'event4': // SalonWeek Moscow
-                case 'event5': // SalonWeek Dubai RU
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbzQTm4hZAEQ06l5E8rrGr-HH6hV4DNdArv0nHaM2GxMcSqXNCMWk29J2soNbRH9nwU2yw/exec';
-                    break;
-                case 'event6': // SalonWeek Dubai ENG
-                    webhookUrl = 'https://script.google.com/macros/s/AKfycbwS7UG9JJfyUEHon9HIROivB1lhmsbKbrMaMRjTp6Z0IiA1-TdIvIVTuTL25IanpXKX/exec';
-                    break;
+            // Проверяем инициализацию Firebase
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase не инициализирован');
             }
 
-            // Отправляем запрос в режиме no-cors
-            await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    event: eventType,
-                    promoCode: currentPromoCode
-                }),
-                mode: 'no-cors' // Режим no-cors, чтобы не ожидать ответа
-            });
+            // Проверяем доступ к коллекции
+            if (typeof promoCodesCollection === 'undefined') {
+                throw new Error('Коллекция промокодов не доступна');
+            }
 
-            // Показываем сообщение об успехе без URL
-            showSuccess();
+            try {
+                // Создаем запись в Firebase
+                const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+                await promoCodesCollection.add({
+                    promoCode: promoCode,
+                    eventCode: eventCode,
+                    year: year.toString(),
+                    createdAt: timestamp,
+                    referralsCount: 0
+                });
+                console.log('Промокод сохранен в Firebase:', { promoCode, eventCode, year });
+            } catch (firebaseError) {
+                console.error('Ошибка Firebase:', firebaseError);
+                throw firebaseError;
+            }
+
+            try {
+                // Отправляем данные в Google Apps Script
+                const webhookUrl = getWebhookUrl(eventCode);
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'cors', // Добавляем режим CORS
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mode: 'create',
+                        event: eventCode,
+                        promoCode: promoCode,
+                        year: year
+                    })
+                });
+
+                // Проверяем ответ
+                if (!response.ok) {
+                    console.warn('Предупреждение: Не удалось отправить данные в Google Sheets');
+                }
+            } catch (fetchError) {
+                console.warn('Предупреждение: Ошибка отправки в Google Apps Script:', fetchError);
+                // Продолжаем выполнение, так как промокод уже создан в Firebase
+            }
+            
+            // Генерируем ссылку на страницу рефералов
+            const referralUrl = `/${eventCode}/${year}/${promoCode}`;
+            
+            // Показываем успешный результат с ссылкой
+            showSuccessWithLink(referralUrl);
+            
             // Очищаем поле ввода
             promoCodeInput.value = '';
             promoDisplay.textContent = '';
         } catch (error) {
+            console.error('Ошибка при создании промокода:', error);
             showError(error.message);
         }
     }
@@ -65,12 +106,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Обработчик кнопки создания
     createButton.addEventListener('click', function() {
         const selectedEvent = eventSelect.value;
+        const selectedYear = yearSelect.value;
+        
         if (!currentPromoCode.trim()) {
             showError('Пожалуйста, введите промокод');
             return;
         }
 
-        sendWebhook(selectedEvent);
+        createPromoCode(selectedEvent, selectedYear, currentPromoCode);
     });
 
     // Функции для отображения состояния
@@ -78,11 +121,20 @@ document.addEventListener('DOMContentLoaded', function() {
         resultDiv.innerHTML = '<div class="loading">Создание промокода...</div>';
     }
 
-    function showSuccess() {
+    function showSuccessWithLink(referralUrl) {
+        const baseUrl = window.location.origin;
+        // Создаем URL для страницы рефералов с параметрами
+        const [_, eventCode, year, promoCode] = referralUrl.split('/');
+        const params = new URLSearchParams({ event: eventCode, year: year, promo: promoCode });
+        const referralPageUrl = `referrals.html?${params.toString()}`;
+        
         resultDiv.innerHTML = `
             <div class="success">
                 Промокод успешно создан!
                 <p>Таблица добавлена в Google Drive.</p>
+                <p>Ссылка для просмотра рефералов: 
+                    <a href="${referralPageUrl}">${baseUrl}${referralUrl}</a>
+                </p>
             </div>
         `;
     }

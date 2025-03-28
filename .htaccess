@@ -1,0 +1,16 @@
+RewriteEngine On
+RewriteBase /
+
+# Если запрашивается существующий файл или директория, используем его
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Перенаправление для админ-панели
+RewriteRule ^admin/?$ /admin.html [L]
+
+# Обработка путей вида /[КОД_МЕРОПРИЯТИЯ]/[ГОД]/[ПРОМОКОД]
+RewriteRule ^([A-Z]+)/([0-9]{4})/([A-Za-z0-9]+)/?$ /referrals.html?event=$1&year=$2&promo=$3 [L]
+
+# Для всех остальных запросов направляем на index.html
+RewriteRule ^ index.html [L]

@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /promoCodes/{promoCode} {
+      allow read: if true;
+      allow write: if request.resource.data.promoCode != null 
+                   && request.resource.data.eventCode != null
+                   && request.resource.data.year != null;
+    }
+  }
+} 

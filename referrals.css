@@ -1,0 +1,122 @@
+.referral-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.info-box, .stats-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-box {
+    flex: 1;
+    min-width: 250px;
+}
+
+.stats-box {
+    flex: 2;
+    min-width: 300px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.info-item, .stat-item {
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-weight: 600;
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.stat-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.referrals-table-container {
+    overflow-x: auto;
+    margin-bottom: 40px;
+}
+
+.referrals-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.referrals-table th {
+    background-color: #f0f0f0;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    position: sticky;
+    top: 0;
+}
+
+.referrals-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.referrals-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.loading-row td {
+    text-align: center;
+    padding: 20px 0;
+    font-style: italic;
+    color: #888;
+}
+
+.error-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-container h2 {
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.error-container .button {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-top: 20px;
+    font-weight: 500;
+}
+
+.error-container .button:hover {
+    background-color: #2980b9;
+}
+
+@media (max-width: 768px) {
+    .referral-info {
+        flex-direction: column;
+    }
+    
+    .info-box, .stats-box {
+        width: 100%;
+    }
+    
+    .stats-box {
+        flex-direction: column;
+    }
+} 

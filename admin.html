@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель промокодов</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="admin.css">
+    <script src="admin.js"></script>
+    <script src="utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="admin-header">
+            <h1>Админ-панель промокодов</h1>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="eventFilter">Мероприятие:</label>
+                    <select id="eventFilter">
+                        <option value="all">Все мероприятия</option>
+                        <option value="MRWRU">🇷🇺🍽️RestaurantWeek Moscow</option>
+                        <option value="DRWRU">🇷🇺🍽️RestaurantWeek Dubai RU</option>
+                        <option value="DRWEN">🌍🍽️RestaurantWeek Dubai ENG</option>
+                        <option value="MSWRU">🇷🇺💅SalonWeek Moscow</option>
+                        <option value="DSWRU">🇷🇺💅SalonWeek Dubai RU</option>
+                        <option value="DSWEN">🌍💅SalonWeek Dubai ENG</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearFilter">Год:</label>
+                    <select id="yearFilter">
+                        <option value="all">Все годы</option>
+                        <!-- Будет заполнено с помощью JavaScript -->
+                    </select>
+                </div>
+                <button id="applyFilters" class="filter-btn">Применить фильтры</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="promo-codes-container">
+                <table id="promoCodesTable" class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Промокод</th>
+                            <th>Мероприятие</th>
+                            <th>Год</th>
+                            <th>Создан</th>
+                            <th>Рефералы</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoCodesTableBody">
+                        <!-- Данные будут загружены с помощью JavaScript -->
+                        <tr class="loading-row">
+                            <td colspan="6">Загрузка данных...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно для управления рефералами -->
+    <div id="referralsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Рефералы по промокоду <span id="modalPromoCode"></span></h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="referrals-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Выплачено:</span>
+                        <span id="modalPaidAmount" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">К оплате:</span>
+                        <span id="modalToPay" class="stat-value">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Людей привлечено:</span>
+                        <span id="modalPeopleReferred" class="stat-value">-</span>
+                    </div>
+                </div>
+                
+                <div class="referrals-table-container">
+                    <table id="modalReferralsTable" class="referrals-table">
+                        <thead>
+                            <tr>
+                                <th>Время оплаты</th>
+                                <th>ID заказа</th>
+                                <th>Продукты</th>
+                                <th>Имя купившего</th>
+                                <th>Цена</th>
+                                <th>Email</th>
+                                <th>Выплата</th>
+                                <th>Оплачено</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalReferralsTableBody">
+                            <!-- Данные будут загружены с помощью JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveChangesBtn" class="primary-btn">Сохранить изменения</button>
+                <button id="closeModalBtn" class="secondary-btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подтверждение удаления -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content delete-confirm">
+            <div class="modal-header">
+                <h2>Подтверждение удаления</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить промокод <strong id="deletePromoCode"></strong>?</p>
+                <p>Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmDeleteBtn" class="danger-btn">Удалить</button>
+                <button id="cancelDeleteBtn" class="secondary-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html> 

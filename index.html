@@ -57,12 +57,19 @@
                                 <div class="event-selector">
                                     <label for="eventSelect">Выберите мероприятие:</label>
                                     <select id="eventSelect">
-                                        <option value="event1">🇷🇺🍽️RestaurantWeek Moscow</option>
-                                        <option value="event2">🇷🇺🍽️RestaurantWeek Dubai RU</option>
-                                        <option value="event3">🌍🍽️RestaurantWeek Dubai ENG</option>
-                                        <option value="event4">🇷🇺💅SalonWeek Moscow</option>
-                                        <option value="event5">🇷🇺💅SalonWeek Dubai RU</option>
-                                        <option value="event6">🌍💅SalonWeek Dubai ENG</option>
+                                        <option value="MRWRU">🇷🇺🍽️RestaurantWeek Moscow</option>
+                                        <option value="DRWRU">🇷🇺🍽️RestaurantWeek Dubai RU</option>
+                                        <option value="DRWEN">🌍🍽️RestaurantWeek Dubai ENG</option>
+                                        <option value="MSWRU">🇷🇺💅SalonWeek Moscow</option>
+                                        <option value="DSWRU">🇷🇺💅SalonWeek Dubai RU</option>
+                                        <option value="DSWEN">🌍💅SalonWeek Dubai ENG</option>
+                                    </select>
+                                </div>
+    
+                                <div class="year-selector">
+                                    <label for="yearSelect">Выберите год:</label>
+                                    <select id="yearSelect">
+                                        <!-- Будет заполнено с помощью JavaScript -->
                                     </select>
                                 </div>
     
@@ -76,7 +83,7 @@
     
                                 <div class="result" id="result"></div>
                             </div>
-
+<!-- 
                             <li><h3>Промокод появится в соответствующей мероприятию Google таблице:</h3></li>
                             <div class="tables-section">
                                 <div class="button-group">
@@ -125,7 +132,7 @@
                                     </a>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <li><h3>Поделитесь с инфопартнером ссылкой на его таблицу</h3></li>
 
                     </ol>
@@ -147,6 +154,16 @@
             </div>
         </div>
     </div>
+    
+    <!-- Firebase скрипты -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Наша конфигурация Firebase -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Наши скрипты -->
     <script src="script.js"></script>
+    <script src="router.js"></script>
 </body>
 </html>

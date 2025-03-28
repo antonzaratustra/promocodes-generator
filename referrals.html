@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр рефералов</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="referrals.css">
+    <script src="utils.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="eventTitle">Загрузка...</h1>
+            <a href="index.html" class="back-link">← Вернуться к генератору</a>
+        </header>
+        
+        <div class="referral-info">
+            <div class="info-box">
+                <div class="info-item">
+                    <strong>Год:</strong>
+                    <span id="yearInfo">-</span>
+                </div>
+                <div class="info-item">
+                    <strong>Промокод:</strong>
+                    <span id="promoInfo">-</span>
+                </div>
+            </div>
+            <div class="stats-box">
+                <div class="stat-item">
+                    <span class="stat-label">Выплачено:</span>
+                    <span id="paidAmount" class="stat-value">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">К оплате:</span>
+                    <span id="toPay" class="stat-value">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Людей привлечено:</span>
+                    <span id="peopleReferred" class="stat-value">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="referrals-table-container">
+            <table id="referralsTable" class="referrals-table">
+                <thead>
+                    <tr>
+                        <th>Время оплаты</th>
+                        <th>ID заказа</th>
+                        <th>Продукты</th>
+                        <th>Имя купившего</th>
+                        <th>Цена</th>
+                        <th>Страница</th>
+                        <th>Email</th>
+                        <th>Выплата</th>
+                        <th>Оплачено</th>
+                    </tr>
+                </thead>
+                <tbody id="referralsTableBody">
+                    <!-- Данные будут загружены с помощью JavaScript -->
+                    <tr class="loading-row">
+                        <td colspan="9">Загрузка данных...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Firebase скрипты -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Наша конфигурация Firebase -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Наши скрипты -->
+    <script>
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventCode = urlParams.get('event');
+        const year = urlParams.get('year');
+        const promoCode = urlParams.get('promo');
+
+        if (!eventCode || !year || !promoCode) {
+            document.body.innerHTML = `
+                <div class="error-page">
+                    <h1>Ошибка</h1>
+                    <p>Отсутствуют необходимые параметры</p>
+                    <a href="index.html" class="error-link">Вернуться на главную</a>
+                </div>
+            `;
+        } else {
+            // Заполняем информацию на странице
+            document.getElementById('eventTitle').textContent = getEventNameByCode(eventCode);
+            document.getElementById('yearInfo').textContent = year;
+            document.getElementById('promoInfo').textContent = promoCode;
+            
+            // Загружаем данные
+            fetchReferralData(eventCode, year, promoCode);
+        }
+
+        function getEventNameByCode(code) {
+            const eventNames = {
+                'MRWRU': 'RestaurantWeek Moscow',
+                'DRWRU': 'RestaurantWeek Dubai RU',
+                'DRWEN': 'RestaurantWeek Dubai ENG',
+                'MSWRU': 'SalonWeek Moscow',
+                'DSWRU': 'SalonWeek Dubai RU',
+                'DSWEN': 'SalonWeek Dubai ENG'
+            };
+            return eventNames[code] || 'Неизвестное мероприятие';
+        }
+
+        // Функция для получения данных рефералов
+        async function fetchReferralData(eventCode, year, promoCode) {
+            try {
+                const webhookUrl = getWebhookUrl(eventCode);
+                const url = new URL(webhookUrl);
+                
+                // Добавляем параметры в URL
+                url.searchParams.append('mode', 'fetch');
+                url.searchParams.append('eventCode', eventCode);
+                url.searchParams.append('year', year);
+                url.searchParams.append('promoCode', promoCode);
+
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                if (data.data) {
+                    renderReferralsTable(data.data);
+                    updateStats(data.data);
+                } else {
+                    renderReferralsTable([]);
+                    updateStats([]);
+                }
+
+            } catch (error) {
+                console.error('Ошибка при загрузке данных:', error);
+                showError(`Ошибка при загрузке данных: ${error.message}`);
+            }
+        }
+
+        function renderReferralsTable(data) {
+            const tableBody = document.getElementById('referralsTableBody');
+            tableBody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="no-data">
+                            Данные не найдены. Это может быть связано с тем, что:
+                            <ul>
+                                <li>По этому промокоду еще нет покупок</li>
+                                <li>Данные еще не синхронизированы</li>
+                                <li>Возникла временная ошибка связи с сервером</li>
+                            </ul>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            data.forEach(item => {
+                const commission = parseFloat(item.price) * 0.05; // 5% комиссия
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${formatDate(item.sent)}</td>
+                    <td>${item.orderid || '-'}</td>
+                    <td>${item.products || '-'}</td>
+                    <td>${item.name || '-'}</td>
+                    <td>${item.price || '0'}</td>
+                    <td>${item.referer || '-'}</td>
+                    <td>${item.email || '-'}</td>
+                    <td>${commission.toFixed(2)}</td>
+                    <td>${item.isPaid ? '✅' : '⏳'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateStats(data) {
+            const paidAmount = data
+                .filter(item => item.isPaid)
+                .reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
+
+            const toPayAmount = data
+                .filter(item => !item.isPaid)
+                .reduce((sum, item) => sum + (parseFloat(item.price) * 0.05), 0);
+
+            document.getElementById('paidAmount').textContent = `${paidAmount.toFixed(2)} ₽`;
+            document.getElementById('toPay').textContent = `${toPayAmount.toFixed(2)} ₽`;
+            document.getElementById('peopleReferred').textContent = data.length;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            return new Date(dateString).toLocaleString('ru-RU');
+        }
+
+        function showError(message) {
+            document.body.innerHTML = `
+                <div class="error-page">
+                    <h1>Ошибка</h1>
+                    <p>${message}</p>
+                    <a href="index.html" class="error-link">Вернуться на главную</a>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html> 

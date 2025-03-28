@@ -1,0 +1,172 @@
+// Настройка CORS для Apps Script
+function doGet(e) {
+  var mode = e.parameter.mode || '';
+  var callback = e.parameter.callback || '';
+  
+  // Подготавливаем данные для ответа
+  var responseData = {};
+  
+  if (mode === 'fetch') {
+    var eventCode = e.parameter.eventCode;
+    var year = e.parameter.year;
+    var promoCode = e.parameter.promoCode;
+    
+    if (!eventCode || !year || !promoCode) {
+      responseData = {
+        error: 'Отсутствуют необходимые параметры',
+        params: { eventCode, year, promoCode }
+      };
+    } else {
+      try {
+        var data = getReferralData(promoCode);
+        responseData = {
+          success: true,
+          data: data,
+          timestamp: new Date().toISOString()
+        };
+      } catch (err) {
+        responseData = {
+          error: err.toString(),
+          stack: err.stack
+        };
+      }
+    }
+  } else {
+    responseData = {
+      message: "Используйте параметр mode=fetch для получения данных",
+      supportedModes: ['fetch'],
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Оборачиваем ответ в JSONP callback если он указан
+  var response = callback ? 
+    callback + "(" + JSON.stringify(responseData) + ")" : 
+    JSON.stringify(responseData);
+
+  return ContentService.createTextOutput(response)
+    .setMimeType(callback ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+}
+
+// Настройка CORS для POST-запросов
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var mode = data.mode || '';
+    
+    if (mode === 'save') {
+      savePaymentStatuses(data.referrals);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Данные успешно сохранены',
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+    } 
+    
+    if (mode === 'create') {
+      createPromoCode(data.promoCode, data.eventCode, data.year);
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        message: 'Промокод успешно создан',
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      error: 'Неизвестный режим запроса',
+      supportedModes: ['save', 'create']
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      error: err.toString(),
+      stack: err.stack
+    }))
+    .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Добавляем обработку OPTIONS для предварительных запросов CORS
+function doOptions(e) {
+  var output = ContentService.createTextOutput();
+  
+  // Настраиваем заголовки CORS для OPTIONS
+  var headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Requested-With',
+    'Access-Control-Max-Age': '3600',
+    'Access-Control-Allow-Credentials': 'true'
+  };
+  
+  // Устанавливаем заголовки
+  for (var key in headers) {
+    output.addHeader(key, headers[key]);
+  }
+  
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+/**
+ * Получает данные рефералов по промокоду
+ */
+function getReferralData(promoCode) {
+  console.log('Getting referral data for promo code:', promoCode);
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data-from-tilda');
+  if (!sheet) {
+    throw new Error('Лист data-from-tilda не найден');
+  }
+  
+  var dataRange = sheet.getDataRange();
+  var values = dataRange.getValues();
+  
+  // Получаем заголовки таблицы
+  var headers = values[0];
+  var promoCodeIndex = headers.indexOf('promocode');
+  
+  if (promoCodeIndex === -1) {
+    throw new Error('Столбец "promocode" не найден');
+  }
+  
+  // Данные для возврата
+  var referrals = [];
+  
+  // Проходим по всем строкам и ищем совпадения с промокодом
+  for (var i = 1; i < values.length; i++) {
+    var row = values[i];
+    if (row[promoCodeIndex] && row[promoCodeIndex].toUpperCase() === promoCode.toUpperCase()) {
+      // Преобразуем строку в объект
+      var referral = {};
+      for (var j = 0; j < headers.length; j++) {
+        referral[headers[j]] = row[j];
+      }
+      
+      // Добавляем информацию о статусе оплаты
+      referral.isPaid = false;
+      
+      // Проверяем статус оплаты
+      var statusSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('payment-statuses');
+      if (statusSheet) {
+        var statusData = statusSheet.getDataRange().getValues();
+        for (var k = 1; k < statusData.length; k++) {
+          if (statusData[k][0] === promoCode && statusData[k][1] === referral.orderid) {
+            referral.isPaid = statusData[k][2] === 'true';
+            break;
+          }
+        }
+      }
+      
+      referrals.push(referral);
+    }
+  }
+  
+  console.log('Found referrals:', referrals.length);
+  return referrals;
+}
+
+// Остальные функции (savePaymentStatuses и createPromoCode) остаются без изменений 
