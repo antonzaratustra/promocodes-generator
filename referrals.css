@@ -7,10 +7,10 @@
 }
 
 .info-box, .stats-box {
-    background: #f8f9fa;
+    background: #333333;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .info-box {
@@ -34,14 +34,14 @@
 .stat-label {
     font-weight: 600;
     display: block;
-    color: #666;
+    color: #e0e0e0;
     font-size: 0.9em;
 }
 
 .stat-value {
     font-size: 1.4em;
     font-weight: 700;
-    color: #2c3e50;
+    color: #ffffff;
 }
 
 .referrals-table-container {
@@ -53,33 +53,35 @@
     width: 100%;
     border-collapse: collapse;
     min-width: 800px;
+    background-color: #333333;
 }
 
 .referrals-table th {
-    background-color: #f0f0f0;
+    background-color: #2d2d2d;
     padding: 12px 15px;
     text-align: left;
     font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #ddd;
+    color: #ffffff;
+    border-bottom: 2px solid #4d4d4d;
     position: sticky;
     top: 0;
 }
 
 .referrals-table td {
     padding: 10px 15px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #4d4d4d;
+    color: #ffffff;
 }
 
 .referrals-table tr:hover {
-    background-color: #f5f5f5;
+    background-color: #4d4d4d;
 }
 
 .loading-row td {
     text-align: center;
     padding: 20px 0;
     font-style: italic;
-    color: #888;
+    color: #e0e0e0;
 }
 
 .error-container {

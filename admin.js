@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Удаляем тестовые кнопки
+    const testButtons = document.querySelectorAll('.btn-success');
+    testButtons.forEach(button => button.remove());
+
     // Элементы интерфейса
     const promoCodesTableBody = document.getElementById('promoCodesTableBody');
     const eventFilter = document.getElementById('eventFilter');
@@ -43,32 +47,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // Загрузка промокодов из Firebase
     async function loadPromoCodes() {
         try {
-            const snapshot = await promoCodesCollection.orderBy('createdAt', 'desc').get();
+            const snapshot = await promoCodesCollection.get();
             const promoCodes = [];
             
-            snapshot.forEach(doc => {
+            for (const doc of snapshot.docs) {
+                const promoData = doc.data();
+                
+                // Получаем данные о рефералах для каждого промокода
+                const referralData = await fetchReferralData(promoData.promoCode, promoData.eventCode);
+                
                 promoCodes.push({
                     id: doc.id,
-                    ...doc.data()
+                    ...promoData,
+                    referralsCount: referralData ? referralData.length : 0 // Добавляем количество рефералов
                 });
-            });
+            }
 
-            renderPromoCodes(promoCodes);
+            displayPromoCodes(promoCodes);
         } catch (error) {
             console.error('Ошибка загрузки промокодов:', error);
             showError('Ошибка загрузки данных: ' + error.message);
         }
     }
     
-    // Отображение промокодов в таблице
-    function renderPromoCodes(promoCodes) {
-        const tableBody = document.getElementById('promoCodesTableBody');
-        tableBody.innerHTML = '';
+    function displayPromoCodes(promoCodes) {
+        const tbody = document.querySelector('#promoCodesTable tbody');
+        tbody.innerHTML = '';
 
         if (promoCodes.length === 0) {
-            tableBody.innerHTML = `
+            tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="no-data">Промокоды не найдены</td>
+                    <td colspan="5" class="text-center">Нет промокодов</td>
                 </tr>
             `;
             return;
@@ -78,35 +87,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${promo.promoCode}</td>
-                <td>${getEventNameByCode(promo.eventCode)}</td>
+                <td>${promo.eventCode}</td>
                 <td>${promo.year}</td>
-                <td>${formatDate(promo.createdAt)}</td>
                 <td>${promo.referralsCount || 0}</td>
-                <td>
-                    <div class="action-buttons">
-                        <a href="referrals.html?event=${promo.eventCode}&year=${promo.year}&promo=${promo.promoCode}" 
-                           class="view-btn">Просмотр</a>
-                        <button class="delete-btn" data-id="${promo.id}">Удалить</button>
-                    </div>
-                </td>
+                <td>${new Date(promo.createdAt).toLocaleString()}</td>
             `;
-            tableBody.appendChild(row);
-        });
-
-        // Добавляем обработчики для кнопок удаления
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                if (confirm('Вы уверены, что хотите удалить этот промокод?')) {
-                    const id = this.dataset.id;
-                    try {
-                        await promoCodesCollection.doc(id).delete();
-                        loadPromoCodes(); // Перезагружаем список
-                    } catch (error) {
-                        console.error('Ошибка удаления:', error);
-                        alert('Ошибка удаления промокода');
-                    }
-                }
-            });
+            tbody.appendChild(row);
         });
     }
     
@@ -229,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(() => {
                 // Удаляем промокод из текущего списка
                 currentPromoCodes = currentPromoCodes.filter(p => p.id !== promoId);
-                renderPromoCodes(currentPromoCodes);
+                loadPromoCodes(); // Перезагружаем список
                 
                 // Закрываем модальное окно
                 deleteConfirmModal.style.display = 'none';

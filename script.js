@@ -73,19 +73,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showSuccessWithLink(promoCode, eventCode, year) {
         const baseUrl = window.location.origin;
-        // Создаем URL для страницы рефералов с параметрами
         const params = new URLSearchParams({ event: eventCode, year: year, promo: promoCode });
         const referralPageUrl = `referrals.html?${params.toString()}`;
         
         resultDiv.innerHTML = `
             <div class="success">
                 Промокод успешно создан!
-                <p>Таблица добавлена в Google Drive.</p>
                 <p>Ссылка для просмотра рефералов: 
-                    <a href="${referralPageUrl}">${baseUrl}/referrals.html?${params.toString()}</a>
+                    <span id="referralLink">${baseUrl}/referrals.html?${params.toString()}</span>
                 </p>
+                <button id="copyButton" class="copy-button">Копировать ссылку</button>
             </div>
         `;
+
+        // Обработчик для кнопки копирования
+        document.getElementById('copyButton').addEventListener('click', function() {
+            const referralLink = document.getElementById('referralLink').innerText;
+            
+            navigator.clipboard.writeText(referralLink).then(() => {
+                alert('Ссылка скопирована в буфер обмена!');
+            }).catch(err => {
+                console.error('Ошибка копирования:', err);
+            });
+        });
     }
 
     function showError(message) {
@@ -98,4 +108,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
     }
+
+    document.getElementById('copyButton').addEventListener('click', function() {
+        const referralLink = document.getElementById('referralLink').innerText;
+        
+        navigator.clipboard.writeText(referralLink).then(() => {
+            alert('Ссылка скопирована в буфер обмена!');
+        }).catch(err => {
+            console.error('Ошибка копирования:', err);
+        });
+    });
 });

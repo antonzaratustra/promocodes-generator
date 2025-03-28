@@ -38,12 +38,6 @@
                 </div>
                 <button id="applyFilters" class="filter-btn">Применить фильтры</button>
             </div>
-            <button onclick="testCreatePromoCode()" style="margin-left: 10px;">
-                Создать тестовый промокод
-            </button>
-            <button onclick="checkExistingPromoCodes()" style="margin-left: 10px;">
-                Проверить существующие промокоды
-            </button>
         </header>
 
         <main>
@@ -390,65 +384,6 @@
                 <button onclick="location.reload()">Попробовать снова</button>
             </div>
         `;
-    }
-
-    async function testCreatePromoCode() {
-        try {
-            const testData = {
-                promoCode: 'TEST' + Date.now(),
-                eventCode: 'MRWRU',
-                year: '2025',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                referralsCount: 0
-            };
-
-            console.log('Пробуем создать тестовый промокод:', testData);
-            
-            const docRef = await promoCodesCollection.add(testData);
-            console.log('Тестовый промокод создан с ID:', docRef.id);
-            
-            // Перезагружаем список
-            await loadPromoCodes();
-            
-            return docRef.id;
-        } catch (error) {
-            console.error('Ошибка создания тестового промокода:', error);
-            throw error;
-        }
-    }
-
-    async function checkExistingPromoCodes() {
-        try {
-            console.log('Проверяем все документы в коллекции...');
-            
-            const snapshot = await firebase.firestore()
-                .collection('promo-codes')
-                .get();
-            
-            console.log('Всего документов в коллекции:', snapshot.size);
-            
-            snapshot.forEach(doc => {
-                console.log('Документ ID:', doc.id);
-                console.log('Данные документа:', doc.data());
-                
-                // Проверяем наличие всех необходимых полей
-                const data = doc.data();
-                const missingFields = [];
-                ['promoCode', 'eventCode', 'year', 'createdAt', 'referralsCount'].forEach(field => {
-                    if (!(field in data)) {
-                        missingFields.push(field);
-                    }
-                });
-                
-                if (missingFields.length > 0) {
-                    console.warn('Документ', doc.id, 'не содержит поля:', missingFields);
-                }
-            });
-            
-        } catch (error) {
-            console.error('Ошибка при проверке документов:', error);
-            alert('Ошибка при проверке: ' + error.message);
-        }
     }
     </script>
 

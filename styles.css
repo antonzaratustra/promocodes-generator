@@ -9,21 +9,22 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 20px;
-    background-color: #f5f5f5;
+    background-color: #1a1a1a;
+    color: #ffffff;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    background: white;
+    background: #2d2d2d;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 h1 {
     text-align: center;
-    color: #2c3e50;
+    color: #ffffff;
     margin-bottom: 30px;
 }
 
@@ -43,21 +44,21 @@ h1 {
 }
 
 h2 {
-    color: #2c3e50;
+    color: #ffffff;
     margin-bottom: 20px;
     font-size: 1.5em;
 }
 
 h3 {
-    color: #34495e;
+    color: #e0e0e0;
     margin-bottom: 15px;
     font-size: 1.2em;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #4d4d4d;
     padding-bottom: 10px;
 }
 
 h4 {
-    color: #34495e;
+    color: #e0e0e0;
     margin-bottom: 10px;
     font-size: 1.1em;
 }
@@ -164,10 +165,12 @@ h4 {
 
 select {
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #4d4d4d;
     border-radius: 4px;
     width: 100%;
     font-size: 16px;
+    background-color: #333333;
+    color: #ffffff;
 }
 
 .promo-input {
@@ -177,17 +180,20 @@ select {
 input[type="text"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #4d4d4d;
     border-radius: 4px;
     font-size: 16px;
+    background-color: #333333;
+    color: #ffffff;
 }
 
 #promoDisplay {
     margin-top: 5px;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #4d4d4d;
     border-radius: 4px;
-    background-color: #f8f9fa;
+    background-color: #333333;
+    color: #ffffff;
     font-weight: 800;
 }
 
@@ -206,14 +212,25 @@ button:hover {
     background-color: #27ae60;
 }
 
-.result {
-    margin-top: 20px;
-    padding: 15px;
+.copy-button {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 8px 16px;
     border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    display: block;
+    width: fit-content;
+    font-size: 14px;
 }
 
-.loading {
-    background-color: #f8f9fa;
+.copy-button:hover {
+    background-color: #218c4a;
+}
+
+.result {
+    margin-top: 20px;
     padding: 15px;
     border-radius: 4px;
 }
@@ -236,7 +253,7 @@ button:hover {
     width: 100%;
     min-width: 0;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: #333333;
     border-radius: 8px;
     margin-bottom: 30px;
 }
@@ -244,9 +261,9 @@ button:hover {
 .instructions h2 {
     margin-top: 0;
     margin-bottom: 20px;
-    color: #2c3e50;
+    color: #ffffff;
     font-size: 1.5em;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #4d4d4d;
     padding-bottom: 10px;
 }
 
@@ -276,7 +293,7 @@ button:hover {
 }
 
 .generator-section {
-    background: whitesmoke;
+    background: #333333;
     padding: 20px;
     border-radius: 4px;
     margin-bottom: 30px;
@@ -284,7 +301,7 @@ button:hover {
 }
 
 .workflow-section {
-    background: white;
+    background: #2d2d2d;
     padding: 20px;
     border-radius: 4px;
     margin-bottom: 30px;
@@ -294,7 +311,7 @@ button:hover {
 .workflow-section h3 {
     margin-top: 0;
     margin-bottom: 20px;
-    color: #2c3e50;
+    color: #e0e0e0;
 }
 
 .workflow-section ol {
@@ -312,7 +329,7 @@ button:hover {
 .workflow-section h4 {
     margin-top: 20px;
     margin-bottom: 15px;
-    color: #34495e;
+    color: #e0e0e0;
     font-size: 1.1em;
 }
 
@@ -434,7 +451,7 @@ button:hover {
     display: inline-block;
     width: 16px;
     height: 16px;
-    border: 3px solid #f3f3f3;
+    border: 3px solid #333333;
     border-top: 3px solid #3498db;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -450,7 +467,7 @@ button:hover {
     margin: 100px auto;
     text-align: center;
     padding: 30px;
-    background-color: #f8f9fa;
+    background-color: #333333;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
