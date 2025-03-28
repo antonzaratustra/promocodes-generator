@@ -49,14 +49,13 @@
                             <th>Мероприятие</th>
                             <th>Год</th>
                             <th>Создан</th>
-                            <th>Рефералы</th>
                             <th>Действия</th>
                         </tr>
                     </thead>
                     <tbody id="promoCodesTableBody">
                         <!-- Данные будут загружены с помощью JavaScript -->
                         <tr class="loading-row">
-                            <td colspan="6">Загрузка данных...</td>
+                            <td colspan="5">Загрузка данных...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -167,7 +166,7 @@
             const tableBody = document.getElementById('promoCodesTableBody');
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="loading">
+                    <td colspan="5" class="loading">
                         <div class="loading-spinner"></div>
                         Загрузка данных...
                     </td>
@@ -263,7 +262,7 @@
         if (promoCodes.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="no-data">Промокоды не найдены</td>
+                    <td colspan="5" class="no-data">Промокоды не найдены</td>
                 </tr>
             `;
             return;
@@ -286,7 +285,6 @@
                 <td>${getEventNameByCode(promo.eventCode)}</td>
                 <td>${promo.year || '-'}</td>
                 <td>${formatDate(promo.createdAt)}</td>
-                <td>${promo.referralsCount || 0}</td>
                 <td>
                     <div class="action-buttons">
                         <a href="${adminUrl}" class="view-btn">👁️ Просмотр</a>
@@ -354,7 +352,7 @@
             const tableBody = document.getElementById('promoCodesTableBody');
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="loading">
+                    <td colspan="5" class="loading">
                         <div class="loading-spinner"></div>
                         Применение фильтров...
                     </td>
